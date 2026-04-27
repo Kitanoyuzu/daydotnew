@@ -35,7 +35,8 @@ function editRecordTemplate() {
       })}
 
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">备注</div>
-      <div class="dd-card flex items-center px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));">
+      <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px]">
+        <i data-lucide="pencil" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
         <input class="flex-1 bg-transparent outline-none" value="米白长袖长裤" />
       </div>
 
@@ -69,7 +70,8 @@ function newRecordTemplate() {
       ${renderCalendarField({ id: "modal-new-date", value: "2026-04-27", placeholder: "选择日期" })}
 
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">备注</div>
-      <div class="dd-card flex items-center px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));">
+      <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px]">
+        <i data-lucide="pencil" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
         <input class="flex-1 bg-transparent outline-none" placeholder="写点什么…" />
       </div>
 

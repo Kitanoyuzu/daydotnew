@@ -8,9 +8,9 @@ function rowLabel(text) {
 function inputRow({ placeholder }) {
   return `
     <div
-      class="dd-card flex items-center px-[14px]"
-      style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));"
+      class="dd-card dd-combo-input flex items-center gap-3 px-[14px]"
     >
+      <i data-lucide="pencil" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
       <input class="w-full bg-transparent outline-none" placeholder="${placeholder}" style="color: var(--text);" />
     </div>
   `;

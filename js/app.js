@@ -7,6 +7,7 @@ import { initModalAll } from "./components/modal.js";
 import { initRecordListAll } from "./components/recordList.js";
 import { initClickFallback } from "./components/clickFallback.js";
 import { initPresetTagsAll } from "./components/presetTags.js";
+import { initTagsManagerAll } from "./components/tagsManager.js";
 
 function mount() {
   const app = document.getElementById("app");
@@ -31,6 +32,7 @@ function mount() {
   initRecordListAll();
   initClickFallback();
   initPresetTagsAll();
+  initTagsManagerAll();
 }
 
 window.addEventListener("hashchange", mount);
@@ -45,6 +47,7 @@ document.addEventListener("dd:modalOpened", () => {
   initCalendarPopoverAll();
   initRecordListAll();
   initPresetTagsAll();
+  initTagsManagerAll();
   lucide?.createIcons?.();
 });
 

@@ -92,8 +92,7 @@ export function renderCalendarField({ id, value = "", label = "", placeholder = 
       ${label ? `<div class="text-[15px]" style="font-weight: 700; color: var(--text);">${label}</div>` : ""}
       <button
         type="button"
-        class="dd-card flex items-center gap-3 px-[14px] rounded-[999px]"
-        style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));"
+        class="dd-card dd-combo-input flex items-center gap-3 px-[14px]"
         data-dd-cal-trigger="${id}"
       >
         <i data-lucide="calendar" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>

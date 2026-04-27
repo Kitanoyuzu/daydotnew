@@ -58,6 +58,46 @@ function buildLeafTagItems(items) {
     .join("");
 }
 
+function buildCreateOption(query) {
+  const q = query.trim();
+  if (!q) return "";
+  return `
+    <button
+      class="dd-combo-item"
+      type="button"
+      data-dd-combo-option="create"
+      data-dd-combo-value="create:${q}"
+      data-dd-combo-label="${q}"
+    >
+      <span class="text-[14px]" style="color: var(--text); font-weight: 800;">新建“${q}”</span>
+      <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);">新建</span>
+    </button>
+  `;
+}
+
+function buildParentItems(items) {
+  if (items.length === 0) {
+    return `<div class="px-3 py-3 text-[12px]" style="color: var(--text-sub);">没有匹配项</div>`;
+  }
+  return items
+    .map((p) => {
+      const c = p.color || "#C4A882";
+      return `
+        <button
+          class="dd-combo-item"
+          type="button"
+          data-dd-combo-option="${p.id}"
+          data-dd-combo-value="${p.id}"
+          data-dd-combo-label="${p.name}"
+        >
+          <span class="text-[14px]" style="color: var(--text);">${p.name}</span>
+          <span style="width: 16px; height: 16px; border-radius: 999px; display:block; border: 2px solid ${c};"></span>
+        </button>
+      `;
+    })
+    .join("");
+}
+
 function buildOptions({ q, mode }) {
   const query = (q || "").trim();
 
@@ -74,6 +114,32 @@ function buildOptions({ q, mode }) {
           <span class="text-[14px]" style="color: var(--text);">全部</span>
           <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);"> </span>
         </button>
+        ${buildLeafTagItems(items)}
+      </div>
+    `;
+  }
+
+  if (mode === "tagParent") {
+    const parents = mockTags.filter((t) => t.parentId == null);
+    const items = query ? parents.filter((p) => p.name.includes(query)) : parents;
+    const exact = !!query && parents.some((p) => p.name === query);
+    return `
+      <div class="flex flex-col gap-1">
+        ${!exact ? buildCreateOption(query) : ""}
+        ${buildParentItems(items)}
+      </div>
+    `;
+  }
+
+  if (mode === "tagChild") {
+    const leafTags = mockTags.filter((t) => t.parentId != null);
+    const items = query
+      ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
+      : leafTags;
+    const exact = !!query && leafTags.some((t) => t.name === query);
+    return `
+      <div class="flex flex-col gap-1">
+        ${!exact ? buildCreateOption(query) : ""}
         ${buildLeafTagItems(items)}
       </div>
     `;
