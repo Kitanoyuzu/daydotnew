@@ -14,7 +14,7 @@ function ensurePortal() {
   return portal;
 }
 
-export function openModal(html, { ariaLabel = "弹窗" } = {}) {
+export function openModal(html, { ariaLabel = "弹窗", variant = "float" } = {}) {
   const portal = ensurePortal();
   if (!portal) return;
 
@@ -22,14 +22,24 @@ export function openModal(html, { ariaLabel = "弹窗" } = {}) {
   const slot = portal.querySelector("[data-dd-modal-slot]");
   if (!overlay || !slot) return;
 
-  slot.innerHTML = `
-    <div class="dd-float" role="dialog" aria-label="${ariaLabel}" style="top: 18svh; padding: 18px;">
-      ${html}
-    </div>
-  `;
+  if (variant === "drawerLeft") {
+    slot.innerHTML = `
+      <aside class="dd-drawer" role="dialog" aria-label="${ariaLabel}">
+        ${html}
+      </aside>
+    `;
+  } else {
+    slot.innerHTML = `
+      <div class="dd-float" role="dialog" aria-label="${ariaLabel}" style="top: 18svh; padding: 18px;">
+        ${html}
+      </div>
+    `;
+  }
 
   requestAnimationFrame(() => {
     overlay.classList.add("is-open");
+    const drawer = slot.querySelector(".dd-drawer");
+    if (drawer) drawer.classList.add("is-in");
   });
 
   const close = () => closeModal();
@@ -104,6 +114,17 @@ export function initModalAll() {
   };
 
   document.addEventListener("click", (e) => {
+    const treePick = e.target.closest?.("[data-dd-tag-tree-value]");
+    if (treePick) {
+      e.preventDefault();
+      const v = String(treePick.getAttribute("data-dd-tag-tree-value") || "").trim();
+      const hidden = latest("[data-dd-vaultall-tagfilter]");
+      if (hidden) hidden.value = v;
+      document.dispatchEvent(new CustomEvent("dd:vaultallFilterChanged"));
+      closeModal();
+      return;
+    }
+
     const action = e.target.closest?.("[data-dd-action]");
     if (action) {
       const type = action.getAttribute("data-dd-action");
@@ -208,6 +229,12 @@ export function initModalAll() {
         toast("已清除");
         return;
       }
+
+      if (type === "vaultall-filter-close") {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
     }
 
     const openBtn = e.target.closest?.("[data-dd-modal-open]");
@@ -228,7 +255,8 @@ export function initModalAll() {
         if (portal) portal.dataset.ddEditingRecordId = Number.isFinite(recordId) ? String(recordId) : "";
       }
 
-      openModal(template.innerHTML, { ariaLabel: openBtn.getAttribute("aria-label") || "弹窗" });
+      const variant = target === "vaultall-filter" ? "drawerLeft" : "float";
+      openModal(template.innerHTML, { ariaLabel: openBtn.getAttribute("aria-label") || "弹窗", variant });
       lucide?.createIcons?.();
 
       if (target === "new-record") {
@@ -254,33 +282,17 @@ export function initModalAll() {
       }
 
       if (target === "vaultall-filter") {
-        // 打开筛选弹窗时：把当前筛选状态同步进弹窗
+        // 打开筛选抽屉：把当前筛选状态同步进抽屉（高亮 + 搜索框清空）
         const tagHidden = latest("[data-dd-vaultall-tagfilter]");
         const tagValue = String(tagHidden?.value || "").trim();
-        const tagRoot = latest('[data-dd-combo-root="vaultall-tag-any"]');
-        const tagInput = latest('[data-dd-combo-input="vaultall-tag-any"]');
-        if (tagRoot) {
-          if (tagValue) tagRoot.dataset.ddValue = tagValue;
-          else delete tagRoot.dataset.ddValue;
-        }
-        if (tagInput) {
-          if (!tagValue) tagInput.value = "";
-          else if (tagValue.startsWith("p:") || tagValue.startsWith("t:")) {
-            const id = Number(tagValue.slice(2));
-            const t = Number.isFinite(id) ? getTagById(id) : null;
-            tagInput.value = t?.name || "";
-          } else tagInput.value = "";
-        }
+        const q = latest("[data-dd-tag-tree-q]");
+        if (q) q.value = "";
 
-        // 选择后实时写回页面隐藏状态
-        if (tagRoot && tagRoot.dataset.ddVaultAllBound !== "1") {
-          tagRoot.dataset.ddVaultAllBound = "1";
-          tagRoot.addEventListener("dd:comboSelect", (ev) => {
-            const v = String(ev?.detail?.value || "");
-            const hidden = latest("[data-dd-vaultall-tagfilter]");
-            if (hidden) hidden.value = v;
-            document.dispatchEvent(new CustomEvent("dd:vaultallFilterChanged"));
-          });
+        // 高亮选中项
+        const items = Array.from(document.querySelectorAll("[data-dd-tag-tree-value]"));
+        for (const el of items) {
+          const v = String(el.getAttribute("data-dd-tag-tree-value") || "");
+          el.classList.toggle("is-active", (tagValue ? v === tagValue : v === ""));
         }
       }
 
@@ -296,6 +308,21 @@ export function initModalAll() {
     if (closeBtn) {
       e.preventDefault();
       closeModal();
+    }
+  });
+
+  document.addEventListener("input", (e) => {
+    const q = e.target?.closest?.("[data-dd-tag-tree-q]");
+    if (!q) return;
+    const query = String(q.value || "").trim().toLowerCase();
+    const items = Array.from(document.querySelectorAll("[data-dd-tag-tree-value]"));
+    if (!query) {
+      for (const el of items) el.classList.remove("hidden");
+      return;
+    }
+    for (const el of items) {
+      const label = String(el.textContent || "").trim().toLowerCase();
+      el.classList.toggle("hidden", !label.includes(query));
     }
   });
 }

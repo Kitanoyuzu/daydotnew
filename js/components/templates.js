@@ -1,6 +1,7 @@
 import { renderComboSearch } from "./comboSearch.js";
 import { renderCalendarField } from "./calendarPopover.js";
 import { formatISO } from "./calendarCore.js";
+import { renderTagTree } from "./tagTree.js";
 
 export function renderGlobalTemplates() {
   return `
@@ -93,23 +94,21 @@ function newRecordTemplate() {
 function vaultAllFilterTemplate() {
   return `
     <div class="flex items-center justify-between pb-3">
-      <div class="text-[16px]" style="font-weight: 800; color: var(--text);">筛选</div>
+      <div class="text-[16px]" style="font-weight: 900; color: var(--text);">标签</div>
       <button class="dd-icon-btn" type="button" aria-label="关闭" data-dd-modal-close><i data-lucide="x" class="w-[18px] h-[18px]"></i></button>
     </div>
 
-    <div class="flex flex-col gap-[12px]">
-      <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">标签</div>
-      ${renderComboSearch({
-        id: "vaultall-tag-any",
-        placeholder: "全部",
-        mode: "tagAnyFilter",
-        variant: "bar",
-      })}
+    <div class="dd-card px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card)); display:flex; align-items:center; gap:10px;">
+      <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
+      <input class="w-full h-full bg-transparent outline-none" placeholder="搜索标签…" data-dd-tag-tree-q />
+    </div>
 
-      <div class="flex items-center gap-3 pt-2">
-        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-action="vaultall-filter-clear">清除筛选</button>
-        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); box-shadow:none;" data-dd-modal-close>完成</button>
-      </div>
+    <div class="pt-4" style="overflow:auto; max-height: calc(100svh - 190px);">
+      ${renderTagTree({ selectedValue: "" })}
+    </div>
+
+    <div class="pt-4">
+      <button class="w-full dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-action="vaultall-filter-clear">清除筛选</button>
     </div>
   `;
 }

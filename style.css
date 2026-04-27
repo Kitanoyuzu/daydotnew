@@ -212,6 +212,78 @@ body{
   pointer-events: auto;
 }
 
+.dd-drawer{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(86vw, 360px);
+  background: color-mix(in srgb, var(--bg) 66%, var(--card));
+  border-right: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  box-shadow: 18px 0 48px rgba(103, 89, 77, 0.18);
+  pointer-events: auto;
+  transform: translateX(-102%);
+  transition: transform 200ms ease;
+  padding: max(env(safe-area-inset-top), 12px) 14px calc(max(env(safe-area-inset-bottom), 12px));
+}
+.dd-drawer.is-in{
+  transform: translateX(0);
+}
+
+.dd-tree-item{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.dd-tree-item:active{
+  background: color-mix(in srgb, var(--secondary) 55%, transparent);
+}
+.dd-tree-item.is-active{
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.dd-drawer{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(86vw, 360px);
+  background: color-mix(in srgb, var(--bg) 66%, var(--card));
+  border-right: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  box-shadow: 18px 0 48px rgba(103, 89, 77, 0.18);
+  pointer-events: auto;
+  transform: translateX(-102%);
+  transition: transform 200ms ease;
+  padding: max(env(safe-area-inset-top), 12px) 14px calc(max(env(safe-area-inset-bottom), 12px));
+}
+.dd-drawer.is-in{
+  transform: translateX(0);
+}
+
+.dd-tree-item{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.dd-tree-item:active{
+  background: color-mix(in srgb, var(--secondary) 55%, transparent);
+}
+.dd-tree-item.is-active{
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
 /* ComboSearch: dropdown is an extension of input */
 .dd-combo{
   position: relative;
