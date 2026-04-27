@@ -208,3 +208,12 @@ export function computeTagStats() {
   return { counts, lastUsedAt };
 }
 
+export function daysSince(iso) {
+  const d = new Date(String(iso || "") + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return 0;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((today.getTime() - d.getTime()) / (24 * 3600 * 1000));
+  return Math.max(0, diff);
+}
+

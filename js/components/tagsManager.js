@@ -1,7 +1,33 @@
 import { renderComboSearch } from "./comboSearch.js";
 import { toast } from "./modal.js";
+import { computeTagStats, getParentTag, listTags, upsertTag } from "../store.js";
 
 export function renderTagsManager() {
+  const tags = listTags();
+  const leaf = tags.filter((t) => t.parentId != null);
+  const { counts } = computeTagStats();
+  const rows = leaf
+    .slice()
+    .sort((a, b) => {
+      const ca = counts.get(a.id) || 0;
+      const cb = counts.get(b.id) || 0;
+      if (cb !== ca) return cb - ca;
+      return b.id - a.id;
+    })
+    .map((t) => {
+      const p = getParentTag(t);
+      const tint = p?.color || "#C4A882";
+      return tagRow({
+        id: t.id,
+        parentId: t.parentId,
+        name: t.name,
+        parent: p?.name || "",
+        count: counts.get(t.id) || 0,
+        tint,
+      });
+    })
+    .join("");
+
   return `
     <section class="flex flex-col gap-[14px]">
       <div class="dd-card" style="padding: 16px;">
@@ -32,12 +58,13 @@ export function renderTagsManager() {
       <div class="dd-card" style="padding: 14px;">
         <div class="dd-card px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card)); display:flex; align-items:center; gap:10px;">
           <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
-          <input class="w-full h-full bg-transparent outline-none" placeholder="搜索标签…" />
+          <input class="w-full h-full bg-transparent outline-none" placeholder="搜索标签…" data-dd-tags-search />
         </div>
 
         <div class="pt-4 flex flex-col gap-3">
-          ${tagRow({ id: 11, parentId: 1, name: "月经", parent: "健康", count: 1, tint: "#B48AA8" })}
-          ${tagRow({ id: 12, parentId: 2, name: "换洗睡衣", parent: "清洁", count: 2, tint: "#7FA7B8" })}
+          <div data-dd-tags-list>
+            ${rows}
+          </div>
         </div>
       </div>
     </section>
@@ -72,6 +99,47 @@ export function initTagsManagerAll() {
   if (document.documentElement.dataset.ddTagsManagerDelegated === "1") return;
   document.documentElement.dataset.ddTagsManagerDelegated = "1";
 
+  const refreshList = () => {
+    const wrap = document.querySelector("[data-dd-tags-list]");
+    if (!wrap) return;
+    const q = (document.querySelector("[data-dd-tags-search]")?.value || "").trim();
+    const tags = listTags();
+    const leaf = tags.filter((t) => t.parentId != null);
+    const { counts } = computeTagStats();
+    const filtered = q
+      ? leaf.filter((t) => t.name.includes(q) || (getParentTag(t)?.name ?? "").includes(q))
+      : leaf;
+
+    wrap.innerHTML = filtered
+      .slice()
+      .sort((a, b) => {
+        const ca = counts.get(a.id) || 0;
+        const cb = counts.get(b.id) || 0;
+        if (cb !== ca) return cb - ca;
+        return b.id - a.id;
+      })
+      .map((t) => {
+        const p = getParentTag(t);
+        const tint = p?.color || "#C4A882";
+        return tagRow({
+          id: t.id,
+          parentId: t.parentId,
+          name: t.name,
+          parent: p?.name || "",
+          count: counts.get(t.id) || 0,
+          tint,
+        });
+      })
+      .join("");
+    lucide?.createIcons?.();
+  };
+
+  document.addEventListener("input", (e) => {
+    const input = e.target?.closest?.("[data-dd-tags-search]");
+    if (!input) return;
+    refreshList();
+  });
+
   document.addEventListener("click", (e) => {
     const pick = e.target.closest?.("[data-dd-tag-pick]");
     if (pick) {
@@ -90,7 +158,7 @@ export function initTagsManagerAll() {
       if (childInput) childInput.value = tagName;
       if (childRoot) childRoot.dataset.ddValue = tagId;
 
-      toast("已载入到上方（原型）");
+      toast("已载入到上方");
       return;
     }
 
@@ -108,13 +176,51 @@ export function initTagsManagerAll() {
       const panel = document.querySelector("[data-dd-tags-color-panel]");
       if (indicator && c) indicator.style.borderColor = c;
       if (panel) panel.classList.add("hidden");
-      toast("父级颜色已选择（原型）");
+      toast("父级颜色已选择");
       return;
     }
 
     const save = e.target.closest?.("[data-dd-tags-save]");
     if (save) {
-      toast("标签已保存（原型）");
+      const parentInput = document.querySelector('[data-dd-combo-input="tags-parent"]');
+      const parentRoot = document.querySelector('[data-dd-combo-root="tags-parent"]');
+      const childInput = document.querySelector('[data-dd-combo-input="tags-child"]');
+      const childRoot = document.querySelector('[data-dd-combo-root="tags-child"]');
+      const indicator = document.querySelector("[data-dd-tags-color-indicator]");
+
+      const parentName = String(parentInput?.value || "").trim();
+      const parentValue = String(parentRoot?.dataset?.ddValue || "").trim();
+      const childName = String(childInput?.value || "").trim();
+      const childValue = String(childRoot?.dataset?.ddValue || "").trim();
+      const color = indicator ? getComputedStyle(indicator).borderColor : "";
+
+      let parentId = null;
+      if (parentValue.startsWith("create:")) {
+        const r = upsertTag({ name: parentName || parentValue.slice("create:".length), parentId: null, color });
+        if (!r.ok) return toast(r.error || "父级保存失败");
+        parentId = r.tag.id;
+        if (parentRoot) parentRoot.dataset.ddValue = String(parentId);
+        if (parentInput) parentInput.value = r.tag.name;
+      } else {
+        const pid = Number(parentValue);
+        if (!Number.isFinite(pid)) return toast("请选择父级");
+        parentId = pid;
+      }
+
+      if (!childName) return toast("请输入子级");
+
+      let childId = null;
+      if (childValue && !childValue.startsWith("create:")) {
+        const cid = Number(childValue);
+        if (Number.isFinite(cid)) childId = cid;
+      }
+      const rr = upsertTag({ id: childId, name: childName, parentId });
+      if (!rr.ok) return toast(rr.error || "子级保存失败");
+
+      if (childRoot) childRoot.dataset.ddValue = String(rr.tag.id);
+      if (childInput) childInput.value = rr.tag.name;
+      toast("标签已保存");
+      refreshList();
     }
   });
 }

@@ -1,4 +1,4 @@
-import { getParentTag, mockTags } from "../mockData.js";
+import { getParentTag, getTagById } from "../store.js";
 import { openModal, closeModal, toast } from "./modal.js";
 
 function pill({ text, tint, isParent = false }) {
@@ -16,7 +16,7 @@ export function renderRecordList({ id, records }) {
 }
 
 export function renderRecordItem(record) {
-  const tag = record.tagId ? mockTags.find((t) => t.id === record.tagId) : null;
+  const tag = record.tagId ? getTagById(record.tagId) : null;
   const parent = getParentTag(tag);
   const tint = parent?.color || "#C4A882";
 

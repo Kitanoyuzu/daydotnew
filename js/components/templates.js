@@ -1,5 +1,6 @@
 import { renderComboSearch } from "./comboSearch.js";
 import { renderCalendarField } from "./calendarPopover.js";
+import { formatISO } from "./calendarCore.js";
 
 export function renderGlobalTemplates() {
   return `
@@ -49,6 +50,7 @@ function editRecordTemplate() {
 }
 
 function newRecordTemplate() {
+  const todayISO = formatISO(new Date());
   return `
     <div class="flex items-center justify-between pb-3">
       <div class="text-[16px]" style="font-weight: 800; color: var(--text);">新增记录</div>
@@ -67,7 +69,7 @@ function newRecordTemplate() {
       })}
 
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">日期</div>
-      ${renderCalendarField({ id: "modal-new-date", value: "2026-04-27", placeholder: "选择日期" })}
+      ${renderCalendarField({ id: "modal-new-date", value: todayISO, placeholder: "选择日期" })}
 
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">备注</div>
       <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px]">

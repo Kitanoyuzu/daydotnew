@@ -1,3 +1,5 @@
+import { createRecord } from "../store.js";
+
 function ensurePortal() {
   const portal = document.getElementById("portal");
   if (!portal) return null;
@@ -72,14 +74,57 @@ export function initModalAll() {
   if (document.documentElement.dataset.ddModalDelegated === "1") return;
   document.documentElement.dataset.ddModalDelegated = "1";
 
+  const latest = (selector) => {
+    const nodes = Array.from(document.querySelectorAll(selector));
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  };
+
   document.addEventListener("click", (e) => {
     const action = e.target.closest?.("[data-dd-action]");
     if (action) {
       const type = action.getAttribute("data-dd-action");
       if (type === "new-record-save") {
         e.preventDefault();
-        toast("已保存（原型）");
+        // modal 新增记录
+        const tagRoot = latest('[data-dd-combo-root="modal-new-tag"]');
+        const dateInput = latest('[data-dd-cal-input="modal-new-date"]');
+        const noteInput = latest('[data-dd-modal-slot] input[placeholder="写点什么…"]');
+
+        const tagIdRaw = String(tagRoot?.dataset?.ddValue || "").trim();
+        const tagId = tagIdRaw ? Number(tagIdRaw) : null;
+        const eventDate = String(dateInput?.value || "").trim();
+        const note = String(noteInput?.value || "");
+
+        const r = createRecord({ tagId: Number.isFinite(tagId) ? tagId : null, eventDate, note });
+        if (!r.ok) return toast(r.error || "保存失败");
+
+        toast("已保存");
         closeModal();
+        return;
+      }
+
+      if (type === "page-new-save") {
+        e.preventDefault();
+        // 录入页在 DOM 内可能同时存在模板/历史节点，统一取“最后一个”
+        const tagRoot = latest('[data-dd-combo-root="new-tag"]');
+        const tagInput = latest('[data-dd-combo-input="new-tag"]');
+        const dateInput = latest('[data-dd-cal-input="new-date"]');
+        const noteInput = latest('[data-dd-input="new-note"]');
+
+        const tagIdRaw = String(tagRoot?.dataset?.ddValue || "").trim();
+        const tagId = tagIdRaw ? Number(tagIdRaw) : null;
+        const eventDate = String(dateInput?.value || "").trim();
+        const note = String(noteInput?.value || "");
+
+        const r = createRecord({ tagId: Number.isFinite(tagId) ? tagId : null, eventDate, note });
+        if (!r.ok) return toast(r.error || "保存失败");
+
+        toast("已记录");
+
+        // 清空（PRD：保存后清空 tag 与备注；日期保留为当前）
+        if (tagInput) tagInput.value = "";
+        if (tagRoot) delete tagRoot.dataset.ddValue;
+        if (noteInput) noteInput.value = "";
         return;
       }
     }

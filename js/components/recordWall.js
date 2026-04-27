@@ -1,10 +1,10 @@
-import { daysSince } from "../mockData.js";
+import { daysSince, getParentTag, getTagById, listRecords } from "../store.js";
 
 function card({ title, days, tag, parent, date, parentColor }) {
   const pBg = `color-mix(in srgb, ${parentColor} 22%, var(--card))`;
   const pText = `color-mix(in srgb, ${parentColor} 68%, var(--text))`;
   return `
-    <a href="#/vault/tag/${tag === "换洗睡衣" ? 12 : 11}" class="dd-card block" style="padding: 16px 16px 14px;">
+    <a href="#/vault/tag/${tag}" class="dd-card block" style="padding: 16px 16px 14px;">
       <div class="flex items-baseline justify-between gap-3">
         <div
           class="text-[20px] truncate"
@@ -27,27 +27,50 @@ function card({ title, days, tag, parent, date, parentColor }) {
 }
 
 export function renderRecordWall() {
-  const washDays = daysSince("2026-04-25");
-  const periodDays = daysSince("2026-04-23");
+  const formatMd = (iso) => {
+    const [y, m, d] = String(iso || "").split("-");
+    if (!m || !d) return iso || "";
+    return `${Number(m)}月${Number(d)}日`;
+  };
+
+  const records = listRecords()
+    .filter((r) => r.tagId != null && r.eventDate)
+    .slice()
+    .sort((a, b) => {
+      if (b.eventDate !== a.eventDate) return b.eventDate > a.eventDate ? 1 : -1;
+      const ua = a.updatedAt || a.createdAt || "";
+      const ub = b.updatedAt || b.createdAt || "";
+      if (ub !== ua) return ub > ua ? 1 : -1;
+      return b.id - a.id;
+    });
+
+  const lastByTag = new Map();
+  for (const r of records) {
+    if (r.tagId == null) continue;
+    if (!lastByTag.has(r.tagId)) lastByTag.set(r.tagId, r);
+  }
+
+  const cards = Array.from(lastByTag.entries())
+    .map(([tagId, r]) => {
+      const tag = getTagById(tagId);
+      if (!tag) return null;
+      const parent = getParentTag(tag);
+      const parentColor = parent?.color || "#C4A882";
+      return card({
+        title: tag.name,
+        days: daysSince(r.eventDate),
+        tag: tag.id,
+        parent: parent?.name || "",
+        date: formatMd(r.eventDate),
+        parentColor,
+      });
+    })
+    .filter(Boolean)
+    .join("");
 
   return `
     <div class="grid grid-cols-2 gap-[14px]">
-      ${card({
-        title: "换洗睡衣",
-        days: washDays,
-        tag: "换洗睡衣",
-        parent: "清洁",
-        date: "4月25日",
-        parentColor: "#7FA7B8",
-      })}
-      ${card({
-        title: "月经",
-        days: periodDays,
-        tag: "月经",
-        parent: "健康",
-        date: "4月23日",
-        parentColor: "#B48AA8",
-      })}
+      ${cards}
     </div>
   `;
 }

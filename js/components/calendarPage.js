@@ -1,15 +1,14 @@
 import { formatISO, renderCalendarMonthCard } from "./calendarCore.js";
-import { mockTags, mockRecords, getParentTag } from "../mockData.js";
+import { daysSince, getParentTag, getTagById, listRecords } from "../store.js";
 import { renderComboSearch } from "./comboSearch.js";
-import { daysSince } from "../mockData.js";
 import { renderRecordList } from "./recordList.js";
 
 export function renderCalendarPage() {
-  const todayISO = formatISO(new Date(2026, 3, 27));
+  const todayISO = formatISO(new Date());
   const init = new Date(todayISO + "T00:00:00");
   const year = init.getFullYear();
   const monthIndex = init.getMonth();
-  const dots = Array.from(new Set(mockRecords.map((r) => r.eventDate)));
+  const dots = Array.from(new Set(listRecords().map((r) => r.eventDate).filter(Boolean)));
   const id = "calendar-page";
 
   return `
@@ -50,12 +49,12 @@ export function initCalendarPageAll() {
       return;
     }
 
-    const tag = mockTags.find((t) => String(t.id) === String(tagId));
+    const tag = getTagById(tagId);
     const parent = getParentTag(tag);
     const title = tag?.name ?? "";
 
-    const records = mockRecords
-      .filter((r) => String(r.tagId) === String(tagId))
+    const records = listRecords()
+      .filter((r) => String(r.tagId) === String(tagId) && r.eventDate)
       .sort((a, b) => (a.eventDate < b.eventDate ? 1 : -1));
     const last = records[0]?.eventDate ?? formatISO(new Date());
     const ds = daysSince(last);
@@ -97,7 +96,14 @@ export function initCalendarPageAll() {
       if (label) label.textContent = selected || "";
       if (!list || !empty) return;
 
-      const items = mockRecords.filter((r) => r.eventDate === selected && (!tagId || String(r.tagId) === String(tagId)));
+      const items = listRecords()
+        .filter((r) => r.eventDate === selected && (!tagId || String(r.tagId) === String(tagId)))
+        .sort((a, b) => {
+          const ua = a.updatedAt || a.createdAt || "";
+          const ub = b.updatedAt || b.createdAt || "";
+          if (ub !== ua) return ub > ua ? 1 : -1;
+          return b.id - a.id;
+        });
       if (items.length === 0) {
         empty.classList.remove("hidden");
         list.innerHTML = "";
@@ -121,7 +127,7 @@ export function initCalendarPageAll() {
 
     const rerenderCalendar = () => {
       const { year, monthIndex, selectedISO } = getYM();
-      const dots = Array.from(new Set(mockRecords.map((r) => r.eventDate)));
+      const dots = Array.from(new Set(listRecords().map((r) => r.eventDate).filter(Boolean)));
       const card = wrap.querySelector(`[data-dd-cal-card="${id}"]`);
       if (!card) return;
       card.outerHTML = renderCalendarMonthCard({ id, year, monthIndex, selectedISO, dots, showFooter: false });

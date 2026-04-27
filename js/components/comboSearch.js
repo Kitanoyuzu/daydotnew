@@ -1,4 +1,4 @@
-import { mockTags, getParentTag } from "../mockData.js";
+import { getParentTag, listTags } from "../store.js";
 
 export function renderComboSearch({ id, placeholder, rightIcon, rightHref, mode, variant = "bar" }) {
   const right = rightIcon
@@ -100,10 +100,12 @@ function buildParentItems(items) {
 
 function buildOptions({ q, mode }) {
   const query = (q || "").trim();
+  const allTags = listTags();
+  const parentTags = allTags.filter((t) => t.parentId == null);
+  const leafTags = allTags.filter((t) => t.parentId != null);
 
   if (mode === "tagFilter") {
     // 统一：仍然展示“子级在左、父级胶囊在右”的同一行样式
-    const leafTags = mockTags.filter((t) => t.parentId != null);
     const items = query
       ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
       : leafTags;
@@ -120,9 +122,8 @@ function buildOptions({ q, mode }) {
   }
 
   if (mode === "tagParent") {
-    const parents = mockTags.filter((t) => t.parentId == null);
-    const items = query ? parents.filter((p) => p.name.includes(query)) : parents;
-    const exact = !!query && parents.some((p) => p.name === query);
+    const items = query ? parentTags.filter((p) => p.name.includes(query)) : parentTags;
+    const exact = !!query && parentTags.some((p) => p.name === query);
     return `
       <div class="flex flex-col gap-1">
         ${!exact ? buildCreateOption(query) : ""}
@@ -132,11 +133,13 @@ function buildOptions({ q, mode }) {
   }
 
   if (mode === "tagChild") {
-    const leafTags = mockTags.filter((t) => t.parentId != null);
-    const items = query
-      ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
-      : leafTags;
-    const exact = !!query && leafTags.some((t) => t.name === query);
+    const parentRoot = document.querySelector?.('[data-dd-combo-root="tags-parent"]');
+    const parentIdRaw = parentRoot?.dataset?.ddValue ?? "";
+    const parentId = Number(parentIdRaw);
+    const scoped = Number.isFinite(parentId) ? leafTags.filter((t) => t.parentId === parentId) : leafTags;
+
+    const items = query ? scoped.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query)) : scoped;
+    const exact = !!query && scoped.some((t) => t.name === query);
     return `
       <div class="flex flex-col gap-1">
         ${!exact ? buildCreateOption(query) : ""}
@@ -145,7 +148,6 @@ function buildOptions({ q, mode }) {
     `;
   }
 
-  const leafTags = mockTags.filter((t) => t.parentId != null);
   const items = query
     ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
     : leafTags;
@@ -166,6 +168,95 @@ function closeMenu(root, menu) {
 }
 
 export function initComboSearchAll() {
+  if (document.documentElement.dataset.ddComboDelegated === "1") return;
+  document.documentElement.dataset.ddComboDelegated = "1";
+
+  const latest = (selector) => {
+    const nodes = Array.from(document.querySelectorAll(selector));
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  };
+
+  const getRootFromEventInput = (inputEl) => inputEl?.closest?.("[data-dd-combo-root]") ?? null;
+  const getRootLatest = (id) => latest(`[data-dd-combo-root="${id}"]`);
+  const getInput = (root, id) => root?.querySelector?.(`[data-dd-combo-input="${id}"]`);
+  const getMenu = (root, id) => root?.querySelector?.(`[data-dd-combo-menu="${id}"]`);
+
+  const render = (root, input, menu) => {
+    const mode = root.getAttribute("data-dd-combo-mode") || "search";
+    menu.innerHTML = buildOptions({ q: input.value, mode });
+    lucide?.createIcons?.();
+  };
+
+  const open = (root, menu) => openMenu(root, menu);
+  const close = (root, menu) => closeMenu(root, menu);
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const openRoots = Array.from(document.querySelectorAll('[data-dd-combo-open="1"]'));
+      if (openRoots.length === 0) return;
+      for (const root of openRoots) {
+        if (root.contains(e.target)) continue;
+        const id = root.getAttribute("data-dd-combo-root");
+        if (!id) continue;
+        const menu = getMenu(root, id);
+        if (!menu) continue;
+        close(root, menu);
+      }
+    },
+    { capture: true },
+  );
+
+  // focus / input / click：用捕获阶段做事件委托，避免 mount 后重复绑定
+  const maybeOpen = (e) => {
+    const input = e.target?.closest?.("[data-dd-combo-input]");
+    if (!input) return;
+    const id = input.getAttribute("data-dd-combo-input");
+    if (!id) return;
+    // 优先就近 root（避免落到隐藏模板的同 id root 上）
+    const root = getRootFromEventInput(input) || getRootLatest(id);
+    const menu = getMenu(root, id);
+    if (!root || !menu) return;
+    render(root, input, menu);
+    open(root, menu);
+  };
+
+  document.addEventListener("focusin", maybeOpen);
+  document.addEventListener("input", maybeOpen);
+  document.addEventListener("click", maybeOpen);
+
+  document.addEventListener("click", (e) => {
+    const option = e.target.closest?.("[data-dd-combo-option]");
+    if (!option) return;
+
+    const root = option.closest?.("[data-dd-combo-root]");
+    if (!root) return;
+    const id = root.getAttribute("data-dd-combo-root");
+    if (!id) return;
+
+    const input = getInput(root, id);
+    const menu = getMenu(root, id);
+    if (!input || !menu) return;
+
+    const mode = root.getAttribute("data-dd-combo-mode") || "search";
+    const label = option.getAttribute("data-dd-combo-label") || "";
+    const value = option.getAttribute("data-dd-combo-value") ?? option.getAttribute("data-dd-combo-option") ?? "";
+    input.value = label;
+    root.dataset.ddValue = value;
+    close(root, menu);
+    input.blur();
+
+    root.dispatchEvent(
+      new CustomEvent("dd:comboSelect", {
+        bubbles: true,
+        detail: { id, mode, value, label },
+      }),
+    );
+  });
+}
+
+// 兼容旧调用（不再做逐个绑定）
+export function initComboSearchAllLegacy() {
   const roots = Array.from(document.querySelectorAll("[data-dd-combo-root]"));
   for (const root of roots) {
     const id = root.getAttribute("data-dd-combo-root");

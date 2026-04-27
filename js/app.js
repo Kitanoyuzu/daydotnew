@@ -8,8 +8,10 @@ import { initRecordListAll } from "./components/recordList.js";
 import { initClickFallback } from "./components/clickFallback.js";
 import { initPresetTagsAll } from "./components/presetTags.js";
 import { initTagsManagerAll } from "./components/tagsManager.js";
+import { ensureStore } from "./store.js";
 
 function mount() {
+  ensureStore();
   const app = document.getElementById("app");
   const portal = document.getElementById("portal");
   if (!app || !portal) return;
