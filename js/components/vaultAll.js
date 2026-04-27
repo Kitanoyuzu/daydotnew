@@ -11,9 +11,17 @@ export function renderVaultAll() {
       <div class="dd-card flex items-center gap-3 px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: var(--shadow-card);">
         <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
         <input class="flex-1 bg-transparent outline-none" placeholder="搜索记录…" />
-        <span class="dd-pill" style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);">
-          <i data-lucide="calendar" class="w-[14px] h-[14px]" style="margin-right: 6px;"></i>日期
-        </span>
+        <button
+          type="button"
+          class="dd-pill"
+          style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);"
+          aria-label="日期筛选"
+          data-dd-cal-trigger="vaultall-datefilter"
+        >
+          <i data-lucide="calendar" class="w-[14px] h-[14px]" style="margin-right: 6px;"></i>
+          <span data-dd-cal-display-text>日期</span>
+          <input type="hidden" data-dd-cal-input="vaultall-datefilter" value="" />
+        </button>
         <span class="dd-pill" style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);">
           <i data-lucide="funnel" class="w-[14px] h-[14px]" style="margin-right: 6px;"></i>今天
         </span>

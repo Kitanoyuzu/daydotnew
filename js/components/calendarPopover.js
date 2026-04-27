@@ -13,7 +13,7 @@ function ensurePortal() {
   return portal;
 }
 
-function openCalendar({ anchorEl, initialISO, dots }) {
+function openCalendar({ anchorEl, initialISO, dots, onChange }) {
   const portal = ensurePortal();
   if (!portal) return;
   const overlay = portal.querySelector("[data-dd-overlay]");
@@ -56,17 +56,21 @@ function openCalendar({ anchorEl, initialISO, dots }) {
       b.addEventListener("click", () => {
         selectedISO = b.getAttribute("data-dd-cal-day") || selectedISO;
         anchorEl.value = selectedISO;
+        onChange?.(selectedISO);
         closeCalendar();
       });
     });
 
     slot.querySelector(`[data-dd-cal-clear="${id}"]`)?.addEventListener("click", () => {
       anchorEl.value = "";
+      onChange?.("");
       closeCalendar();
     });
 
     slot.querySelector(`[data-dd-cal-today="${id}"]`)?.addEventListener("click", () => {
-      anchorEl.value = formatISO(new Date());
+      const v = formatISO(new Date());
+      anchorEl.value = v;
+      onChange?.(v);
       closeCalendar();
     });
   };
@@ -112,16 +116,34 @@ export function renderCalendarField({ id, value = "", label = "", placeholder = 
 
 export function initCalendarPopoverAll() {
   ensurePortal();
-  document.querySelectorAll("[data-dd-cal-trigger]").forEach((btn) => {
-    if (btn.dataset.ddCalBound === "1") return;
-    btn.dataset.ddCalBound = "1";
-    const id = btn.getAttribute("data-dd-cal-trigger");
-    const input = id ? document.querySelector(`[data-dd-cal-input="${id}"]`) : null;
-    if (!id || !input) return;
+  if (document.documentElement.dataset.ddCalDelegated === "1") return;
+  document.documentElement.dataset.ddCalDelegated = "1";
 
-    btn.addEventListener("click", () => {
-      openCalendar({ anchorEl: input, initialISO: input.value, dots: [] });
-    });
+  const findLatestInput = (id) => {
+    const nodes = Array.from(document.querySelectorAll(`[data-dd-cal-input="${id}"]`));
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  };
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest?.("[data-dd-cal-trigger]");
+    if (!btn) return;
+    e.preventDefault();
+
+    const id = btn.getAttribute("data-dd-cal-trigger");
+    if (!id) return;
+
+    const input =
+      btn.querySelector?.(`[data-dd-cal-input="${id}"]`) ||
+      findLatestInput(id);
+    if (!input) return;
+
+    const display = btn.querySelector?.("[data-dd-cal-display-text]");
+    const onChange = (v) => {
+      // 同步 UI 文案（如日期筛选 pill）
+      if (display) display.textContent = v || "日期";
+    };
+
+    openCalendar({ anchorEl: input, initialISO: input.value, dots: [], onChange });
   });
 }
 
