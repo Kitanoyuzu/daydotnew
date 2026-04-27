@@ -1,4 +1,5 @@
 import { daysSince } from "../mockData.js";
+import { renderRecordList } from "./recordList.js";
 
 export function renderVaultTag({ id }) {
   const tagId = Number(id || 12);
@@ -29,40 +30,17 @@ export function renderVaultTag({ id }) {
         <button class="dd-icon-btn" type="button" aria-label="新增"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
       </div>
 
-      <div class="relative pl-[16px] flex flex-col gap-4">
-        <div style="position:absolute; left: 6px; top: 2px; bottom: 2px; width: 2px; background: color-mix(in srgb, var(--border) 70%, transparent); border-radius: 99px;"></div>
-
-        ${timelineItem({ title, date: "2026-04-25", note: "米白长袖长裤", tint })}
-        ${timelineItem({ title, date: "2026-04-25", note: "米白长袖长裤", tint })}
-      </div>
+      ${renderRecordList({
+        id: "vault-tag-records",
+        records: [
+          { id: 1, tagId: tagId, eventDate: "2026-04-25", note: "米白长袖长裤" },
+          { id: 2, tagId: tagId, eventDate: "2026-04-25", note: "米白长袖长裤" },
+        ],
+      })}
     </section>
 
     <div class="hidden" data-dd-template="edit-record">
       ${editModalTemplate()}
-    </div>
-  `;
-}
-
-function timelineItem({ title, date, note, tint }) {
-  const pBg = `color-mix(in srgb, ${tint} 16%, var(--card))`;
-  const pText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
-  return `
-    <div class="relative">
-      <div style="position:absolute; left: -14px; top: 14px; width: 10px; height: 10px; border-radius: 999px; background: var(--bg); border: 2px solid color-mix(in srgb, var(--border) 80%, transparent);"></div>
-
-      <div class="dd-card" style="padding: 14px 14px 12px; background: color-mix(in srgb, var(--bg) 70%, var(--card));">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-2">
-            <span class="dd-pill" style="background: ${pBg}; color: ${pText};">${title}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="text-[12px]" style="color: var(--text-sub);">${date}</div>
-            <button class="dd-icon-btn" type="button" aria-label="编辑" data-dd-modal-open="edit-record"><i data-lucide="pencil" class="w-[18px] h-[18px]"></i></button>
-            <button class="dd-icon-btn" type="button" aria-label="删除"><i data-lucide="trash-2" class="w-[18px] h-[18px]"></i></button>
-          </div>
-        </div>
-        <div class="pt-2 text-[16px]" style="color: var(--text); font-weight: 700;">${note}</div>
-      </div>
     </div>
   `;
 }

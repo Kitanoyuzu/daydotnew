@@ -4,6 +4,7 @@ import { routes, resolveRoute } from "./router.js";
 import { initComboSearchAll } from "./components/comboSearch.js";
 import { initCalendarPopoverAll } from "./components/calendarPopover.js";
 import { initModalAll } from "./components/modal.js";
+import { initRecordListAll } from "./components/recordList.js";
 
 function mount() {
   const app = document.getElementById("app");
@@ -25,6 +26,7 @@ function mount() {
   initComboSearchAll();
   initCalendarPopoverAll();
   initModalAll();
+  initRecordListAll();
 }
 
 window.addEventListener("hashchange", mount);

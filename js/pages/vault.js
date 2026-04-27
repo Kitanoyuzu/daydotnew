@@ -8,6 +8,7 @@ export function pageVault() {
         id: "vault-search",
         placeholder: "搜索记录…",
         rightIcon: "home",
+        rightHref: "#/vault/all",
         mode: "search",
       })}
 

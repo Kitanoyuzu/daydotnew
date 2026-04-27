@@ -1,3 +1,5 @@
+import { renderRecordList } from "./recordList.js";
+
 export function renderVaultAll() {
   return `
     <section class="flex flex-col gap-[14px]">
@@ -17,38 +19,19 @@ export function renderVaultAll() {
         </span>
       </div>
 
-      <div class="flex flex-col gap-3">
-        ${row({ tag: "未分类", parent: "", date: "2026-04-26", note: "", tint: "#C4A882" })}
-        ${row({ tag: "换洗睡衣", parent: "清洁", date: "2026-04-25", note: "米白长袖长裤", tint: "#7FA7B8" })}
-        ${row({ tag: "换洗睡衣", parent: "清洁", date: "2026-04-25", note: "米白长袖长裤", tint: "#7FA7B8" })}
-        ${row({ tag: "月经", parent: "健康", date: "2026-04-23", note: "", tint: "#B48AA8" })}
-      </div>
+      ${renderRecordList({
+        id: "vault-all-records",
+        records: [
+          { id: 1004, tagId: null, eventDate: "2026-04-26", note: "" },
+          { id: 1001, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤" },
+          { id: 1002, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤" },
+          { id: 1003, tagId: 11, eventDate: "2026-04-23", note: "" },
+        ],
+      })}
     </section>
 
     <div class="hidden" data-dd-template="edit-record">
       ${editModalTemplate()}
-    </div>
-  `;
-}
-
-function row({ tag, parent, date, note, tint }) {
-  const bg = `color-mix(in srgb, var(--bg) 70%, var(--card))`;
-  const pBg = `color-mix(in srgb, ${tint} 22%, var(--card))`;
-  const pText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
-  return `
-    <div class="dd-card flex items-center justify-between px-4 py-3" style="border-radius: var(--r-card); box-shadow: var(--shadow-card); background:${bg};">
-      <div class="flex flex-col gap-[6px]">
-        <div class="flex items-center gap-2">
-          ${tag === "未分类" ? `<span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);">未分类</span>` : `<span class="dd-pill" style="background: color-mix(in srgb, ${tint} 16%, var(--card)); color:${pText};">${tag}</span>`}
-        </div>
-        ${note ? `<div class="text-[16px]" style="color: var(--text); font-weight: 700;">${note}</div>` : ``}
-      </div>
-
-      <div class="flex items-center gap-3">
-        <div class="text-[12px]" style="color: var(--text-sub);">${date}</div>
-        <button class="dd-icon-btn" type="button" aria-label="编辑" data-dd-modal-open="edit-record"><i data-lucide="pencil" class="w-[18px] h-[18px]"></i></button>
-        <button class="dd-icon-btn" type="button" aria-label="删除"><i data-lucide="trash-2" class="w-[18px] h-[18px]"></i></button>
-      </div>
     </div>
   `;
 }

@@ -1,40 +1,38 @@
 import { mockTags, getParentTag } from "../mockData.js";
 
-export function renderComboSearch({ id, placeholder, rightIcon, mode }) {
+export function renderComboSearch({ id, placeholder, rightIcon, rightHref, mode, variant = "bar" }) {
   const right = rightIcon
-    ? `<button class="dd-icon-btn" type="button" data-dd-combo-right="${id}"><i data-lucide="${rightIcon}" class="w-[18px] h-[18px]"></i></button>`
+    ? `<a class="dd-icon-btn" href="${rightHref || "#"}" data-dd-combo-right="${id}" aria-label="快捷入口"><i data-lucide="${rightIcon}" class="w-[18px] h-[18px]"></i></a>`
     : "";
 
+  const isCompact = variant === "compact";
+  const h = isCompact ? 34 : 52;
+  const icon = isCompact ? "" : `<i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>`;
+
   return `
-    <div class="relative" data-dd-combo-root="${id}" data-dd-combo-mode="${mode}">
-      <div class="dd-card flex items-center gap-3 px-[14px] h-[52px] rounded-[999px] shadow-[var(--shadow-card)]" style="border-radius: var(--r-pill);">
-        <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
+    <div class="dd-combo" data-dd-combo-root="${id}" data-dd-combo-mode="${mode}">
+      <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px] shadow-[var(--shadow-card)]" style="height: ${h}px; border-radius: var(--r-pill);">
+        ${icon}
         <input
           class="flex-1 bg-transparent outline-none placeholder:opacity-100"
           style="color: var(--text); font-size: 14px;"
           data-dd-combo-input="${id}"
           placeholder="${placeholder}"
           autocomplete="off"
+          ${isCompact ? "readonly" : ""}
         />
         ${right}
       </div>
 
       <div
-        class="dd-float hidden"
+        class="dd-combo-menu hidden"
         data-dd-combo-menu="${id}"
-        style="top: calc(52px + var(--combo-menu-gap)); padding: 10px; max-height: var(--combo-menu-max-h); overflow: auto;"
       ></div>
     </div>
   `;
 }
 
-function buildOptions({ q }) {
-  const query = (q || "").trim();
-  const leafTags = mockTags.filter((t) => t.parentId != null);
-  const items = query
-    ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
-    : leafTags;
-
+function buildLeafTagItems(items) {
   if (items.length === 0) {
     return `<div class="px-3 py-3 text-[12px]" style="color: var(--text-sub);">没有匹配项</div>`;
   }
@@ -47,10 +45,10 @@ function buildOptions({ q }) {
       const pBg = `color-mix(in srgb, ${pColor} 22%, var(--card))`;
       return `
         <button
-          class="w-full flex items-center justify-between px-3 py-2 rounded-[999px]"
-          style="border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 70%, var(--card));"
+          class="dd-combo-item"
           type="button"
           data-dd-combo-option="${t.id}"
+          data-dd-combo-value="${t.id}"
           data-dd-combo-label="${t.name}"
           data-dd-combo-parent="${pName}"
           data-dd-combo-parent-color="${pColor}"
@@ -63,26 +61,58 @@ function buildOptions({ q }) {
     .join("");
 }
 
+function buildOptions({ q, mode }) {
+  const query = (q || "").trim();
+
+  if (mode === "tagFilter") {
+    // 统一：仍然展示“子级在左、父级胶囊在右”的同一行样式
+    const leafTags = mockTags.filter((t) => t.parentId != null);
+    const items = query
+      ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
+      : leafTags;
+
+    return `
+      <div class="flex flex-col gap-1">
+        <button type="button" class="dd-combo-item" data-dd-combo-option="all" data-dd-combo-value="" data-dd-combo-label="全部">
+          <span class="text-[14px]" style="color: var(--text);">全部</span>
+          <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);"> </span>
+        </button>
+        ${buildLeafTagItems(items)}
+      </div>
+    `;
+  }
+
+  const leafTags = mockTags.filter((t) => t.parentId != null);
+  const items = query
+    ? leafTags.filter((t) => t.name.includes(query) || (getParentTag(t)?.name ?? "").includes(query))
+    : leafTags;
+
+  return buildLeafTagItems(items);
+}
+
 function openMenu(root, menu) {
   menu.classList.remove("hidden");
   root.dataset.ddComboOpen = "1";
+  root.dataset.ddOpen = "1";
 }
 
 function closeMenu(root, menu) {
   menu.classList.add("hidden");
   delete root.dataset.ddComboOpen;
+  delete root.dataset.ddOpen;
 }
 
 export function initComboSearchAll() {
   const roots = Array.from(document.querySelectorAll("[data-dd-combo-root]"));
   for (const root of roots) {
     const id = root.getAttribute("data-dd-combo-root");
+    const mode = root.getAttribute("data-dd-combo-mode") || "search";
     const input = root.querySelector(`[data-dd-combo-input="${id}"]`);
     const menu = root.querySelector(`[data-dd-combo-menu="${id}"]`);
     if (!id || !input || !menu) continue;
 
     const render = () => {
-      menu.innerHTML = buildOptions({ q: input.value });
+      menu.innerHTML = buildOptions({ q: input.value, mode });
       lucide?.createIcons?.();
     };
 
@@ -96,14 +126,28 @@ export function initComboSearchAll() {
       openMenu(root, menu);
     });
 
+    input.addEventListener("click", () => {
+      render();
+      openMenu(root, menu);
+    });
+
     root.addEventListener("click", (e) => {
       const option = e.target.closest("[data-dd-combo-option]");
       if (!option) return;
 
       const label = option.getAttribute("data-dd-combo-label") || "";
+      const value = option.getAttribute("data-dd-combo-value") ?? option.getAttribute("data-dd-combo-option") ?? "";
       input.value = label;
+      root.dataset.ddValue = value;
       closeMenu(root, menu);
       input.blur();
+
+      root.dispatchEvent(
+        new CustomEvent("dd:comboSelect", {
+          bubbles: true,
+          detail: { id, mode, value, label },
+        }),
+      );
     });
 
     document.addEventListener("pointerdown", (e) => {
@@ -112,11 +156,7 @@ export function initComboSearchAll() {
       closeMenu(root, menu);
     });
 
-    const right = root.querySelector(`[data-dd-combo-right="${id}"]`);
-    right?.addEventListener("click", (e) => {
-      e.preventDefault();
-      // 原型：右侧按钮不做跳转，仅表现态
-    });
+    // 右侧按钮：若传了 href 走跳转；否则保持默认
   }
 }
 

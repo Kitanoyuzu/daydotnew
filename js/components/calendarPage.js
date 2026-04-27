@@ -1,5 +1,8 @@
 import { formatISO, renderCalendarMonthCard } from "./calendarCore.js";
 import { mockTags, mockRecords, getParentTag } from "../mockData.js";
+import { renderComboSearch } from "./comboSearch.js";
+import { daysSince } from "../mockData.js";
+import { renderRecordList } from "./recordList.js";
 
 export function renderCalendarPage() {
   const todayISO = formatISO(new Date(2026, 3, 27));
@@ -11,12 +14,16 @@ export function renderCalendarPage() {
 
   return `
     <section class="flex flex-col gap-[14px]">
-      <div class="flex items-center justify-between">
-        ${renderTagFilterPill({ id: "cal-tag", label: "全部" })}
-        <span class="dd-pill" style="height: 28px; padding: 0 12px; background: var(--accent); color: var(--card);">all</span>
-      </div>
+      ${renderComboSearch({
+        id: "calendar-tag-filter",
+        placeholder: "全部",
+        mode: "tagFilter",
+        variant: "bar",
+      })}
 
-      <div data-dd-cal-inline-root="${id}" data-dd-cal-selected="${todayISO}" data-dd-cal-year="${year}" data-dd-cal-month="${monthIndex}">
+      <div data-dd-cal-metric class="hidden"></div>
+
+      <div data-dd-cal-inline-root="${id}" data-dd-cal-selected="${todayISO}" data-dd-cal-year="${year}" data-dd-cal-month="${monthIndex}" data-dd-cal-tag="">
         ${renderCalendarMonthCard({ id, year, monthIndex, selectedISO: todayISO, dots, showFooter: false })}
 
         <div class="flex items-center justify-between pt-4">
@@ -25,103 +32,54 @@ export function renderCalendarPage() {
         </div>
 
         <div class="pt-8 pb-2 text-center text-[14px]" style="color: var(--text-sub);" data-dd-cal-empty>这一天没有记录</div>
-        <div class="pt-4 flex flex-col gap-3" data-dd-cal-timeline></div>
+        <div class="pt-4" data-dd-cal-timeline></div>
       </div>
     </section>
   `;
 }
 
-function renderTagFilterPill({ id, label }) {
-  return `
-    <div class="relative" data-dd-tagfilter-root="${id}">
-      <button
-        type="button"
-        class="dd-pill"
-        data-dd-tagfilter-btn="${id}"
-        style="height: 34px; padding: 0 14px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);"
-      >
-        ${label}
-      </button>
-      <div
-        class="dd-float hidden"
-        data-dd-tagfilter-menu="${id}"
-        style="top: calc(34px + var(--combo-menu-gap)); padding: 10px; max-height: 220px; overflow:auto;"
-      >
-        ${buildTagFilterMenu()}
-      </div>
-    </div>
-  `;
-}
-
-function buildTagFilterMenu() {
-  const parents = mockTags.filter((t) => t.parentId == null);
-  const parentItems = parents
-    .map((p) => {
-      const c = p.color || "#C4A882";
-      const ring = `border: 2px solid ${c};`;
-      return `
-        <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-[999px]" style="border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 70%, var(--card));" data-dd-tagfilter-opt="${p.id}">
-          <span class="text-[14px]" style="color: var(--text);">${p.name}</span>
-          <span style="width: 16px; height: 16px; border-radius: 999px; display:block; ${ring}"></span>
-        </button>
-      `;
-    })
-    .join("");
-
-  return `
-    <div class="flex flex-col gap-2">
-      <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-[999px]" style="border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 70%, var(--card));" data-dd-tagfilter-opt="all">
-        <span class="text-[14px]" style="color: var(--text);">全部</span>
-        <span style="width: 16px; height: 16px; border-radius: 999px; display:block; border: 2px solid var(--accent);"></span>
-      </button>
-      ${parentItems}
-    </div>
-  `;
-}
-
 export function initCalendarPageAll() {
-  // Tag filter pill menu
-  document.querySelectorAll("[data-dd-tagfilter-root]").forEach((root) => {
-    if (root.dataset.ddBound === "1") return;
-    root.dataset.ddBound = "1";
-    const id = root.querySelector("[data-dd-tagfilter-btn]")?.getAttribute("data-dd-tagfilter-btn");
-    const btn = id ? root.querySelector(`[data-dd-tagfilter-btn="${id}"]`) : null;
-    const menu = id ? root.querySelector(`[data-dd-tagfilter-menu="${id}"]`) : null;
-    if (!id || !btn || !menu) return;
+  const metric = document.querySelector("[data-dd-cal-metric]");
+  const filterRoot = document.querySelector('[data-dd-combo-root="calendar-tag-filter"]');
 
-    const open = () => {
-      menu.classList.remove("hidden");
-      root.dataset.ddOpen = "1";
-      lucide?.createIcons?.();
-    };
-    const close = () => {
-      menu.classList.add("hidden");
-      delete root.dataset.ddOpen;
-    };
+  const renderMetric = (tagId) => {
+    if (!metric) return;
+    if (!tagId) {
+      metric.classList.add("hidden");
+      metric.innerHTML = "";
+      return;
+    }
 
-    btn.addEventListener("click", () => {
-      if (root.dataset.ddOpen) close();
-      else open();
-    });
+    const tag = mockTags.find((t) => String(t.id) === String(tagId));
+    const parent = getParentTag(tag);
+    const title = tag?.name ?? "";
 
-    menu.addEventListener("click", (e) => {
-      const opt = e.target.closest("[data-dd-tagfilter-opt]");
-      if (!opt) return;
-      const val = opt.getAttribute("data-dd-tagfilter-opt");
-      if (val === "all") btn.textContent = "全部";
-      else {
-        const p = mockTags.find((t) => String(t.id) === String(val));
-        btn.textContent = p?.name ?? "全部";
-      }
-      close();
-    });
+    const records = mockRecords
+      .filter((r) => String(r.tagId) === String(tagId))
+      .sort((a, b) => (a.eventDate < b.eventDate ? 1 : -1));
+    const last = records[0]?.eventDate ?? formatISO(new Date());
+    const ds = daysSince(last);
 
-    document.addEventListener("pointerdown", (e) => {
-      if (!root.dataset.ddOpen) return;
-      if (root.contains(e.target)) return;
-      close();
-    });
-  });
+    const tint = parent?.color || "#C4A882";
+    const pillBg = `color-mix(in srgb, ${tint} 18%, var(--card))`;
+    const pillText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
+
+    metric.classList.remove("hidden");
+    metric.innerHTML = `
+      <div class="dd-card" style="padding: 18px; background: color-mix(in srgb, var(--bg) 70%, var(--card));">
+        <div class="flex items-center justify-between pb-2">
+          <div class="text-[14px]" style="color: var(--text); font-weight: 800;">${title}</div>
+          <span class="dd-pill" style="background: ${pillBg}; color: ${pillText};">${parent?.name ?? ""}</span>
+        </div>
+        <div class="text-center" style="color: color-mix(in srgb, var(--accent) 88%, var(--text));">
+          <span class="text-[44px]" style="font-weight: 300; letter-spacing: -0.04em;">${ds}</span>
+          <span class="text-[16px]" style="color: var(--text-sub); margin-left: 6px;">天</span>
+        </div>
+        <div class="pt-1 text-center text-[13px]" style="color: var(--text-sub);">距上次 · ${title}</div>
+      </div>
+    `;
+    lucide?.createIcons?.();
+  };
 
   // Inline calendar interactions + timeline
   document.querySelectorAll("[data-dd-cal-inline-root]").forEach((wrap) => {
@@ -132,35 +90,22 @@ export function initCalendarPageAll() {
 
     const rerenderTimeline = () => {
       const selected = wrap.getAttribute("data-dd-cal-selected") || "";
+      const tagId = wrap.getAttribute("data-dd-cal-tag") || "";
       const list = wrap.querySelector("[data-dd-cal-timeline]");
       const empty = wrap.querySelector("[data-dd-cal-empty]");
       const label = wrap.querySelector("[data-dd-cal-date-label]");
       if (label) label.textContent = selected || "";
       if (!list || !empty) return;
 
-      const items = mockRecords.filter((r) => r.eventDate === selected);
+      const items = mockRecords.filter((r) => r.eventDate === selected && (!tagId || String(r.tagId) === String(tagId)));
       if (items.length === 0) {
         empty.classList.remove("hidden");
         list.innerHTML = "";
         return;
       }
       empty.classList.add("hidden");
-      list.innerHTML = items
-        .map((r) => {
-          const tag = mockTags.find((t) => t.id === r.tagId);
-          const p = getParentTag(tag);
-          const tint = p?.color || "#C4A882";
-          const pText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
-          return `
-            <div class="dd-card flex items-center justify-between px-4 py-3" style="border-radius: var(--r-card); box-shadow: var(--shadow-card); background: color-mix(in srgb, var(--bg) 70%, var(--card));">
-              <div class="flex items-center gap-2">
-                ${tag ? `<span class="dd-pill" style="background: color-mix(in srgb, ${tint} 16%, var(--card)); color:${pText};">${tag.name}</span>` : `<span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);">未分类</span>`}
-              </div>
-              <div class="text-[12px]" style="color: var(--text-sub);">${r.eventDate}</div>
-            </div>
-          `;
-        })
-        .join("");
+      list.innerHTML = renderRecordList({ id: "calendar-day-records", records: items });
+      lucide?.createIcons?.();
     };
 
     const getYM = () => ({
@@ -218,6 +163,13 @@ export function initCalendarPageAll() {
 
     bindCalendarButtons();
     rerenderTimeline();
+
+    filterRoot?.addEventListener("dd:comboSelect", (e) => {
+      const { value } = e.detail || {};
+      wrap.setAttribute("data-dd-cal-tag", value || "");
+      renderMetric(value || "");
+      rerenderTimeline();
+    });
   });
 }
 

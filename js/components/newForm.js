@@ -25,6 +25,7 @@ export function renderNewForm() {
           id: "new-tag",
           placeholder: "添加标签…",
           rightIcon: "settings",
+          rightHref: "#/tags",
           mode: "tag",
         })}
 

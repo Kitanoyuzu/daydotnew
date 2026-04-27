@@ -51,6 +51,12 @@
 
   /* app frame (mobile-first) */
   --app-max-w: 430px;
+
+  /* record list */
+  --record-card-pad-x: 16px;
+  --record-card-pad-y: 12px;
+  --record-row-gap: 10px;
+  --record-actions-gap: 10px;
 }
 
 html, body{
@@ -120,11 +126,11 @@ body{
   padding: 10px var(--space-page-x) calc(10px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--bg) 84%, var(--card));
   border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  z-index: 50;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: end;
   gap: 18px;
-  z-index: 50;
 }
 
 .dd-bottom-nav .dd-nav-item{
@@ -190,6 +196,114 @@ body{
   box-shadow: var(--shadow-float);
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   pointer-events: auto;
+}
+
+/* ComboSearch: dropdown is an extension of input */
+.dd-combo{
+  position: relative;
+}
+.dd-combo-input{
+  border-radius: var(--r-pill);
+  transition: border-radius 120ms ease;
+}
+.dd-combo[data-dd-open="1"] .dd-combo-input{
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+.dd-combo-menu{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52px;
+  background: color-mix(in srgb, var(--bg) 70%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-top: none;
+  border-radius: 22px; /* 四角圆角（菜单自身） */
+  box-shadow: var(--shadow-card);
+  padding: 8px 10px 10px;
+  max-height: var(--combo-menu-max-h);
+  overflow: auto;
+}
+
+.dd-combo-item{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 6px;
+  border-radius: 16px;
+  background: transparent;
+}
+.dd-combo-item:active{
+  background: color-mix(in srgb, var(--secondary) 55%, transparent);
+}
+
+/* Record list (统一历史记录/列表条目) */
+.dd-record-list{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dd-record-card{
+  background: color-mix(in srgb, var(--bg) 70%, var(--card));
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--record-card-pad-y) var(--record-card-pad-x);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.dd-record-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dd-record-row--top{
+  padding-bottom: 10px;
+}
+
+.dd-record-pills{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dd-record-date{
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+
+.dd-record-note{
+  font-size: 16px;
+  color: var(--text);
+  font-weight: 700;
+  min-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.dd-record-note--empty{
+  opacity: 0;
+}
+
+.dd-record-actions{
+  display: inline-flex;
+  align-items: center;
+  gap: var(--record-actions-gap);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.dd-record-card[data-dd-active="1"] .dd-record-actions{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce){
