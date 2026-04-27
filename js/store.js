@@ -1,0 +1,210 @@
+const LS_KEY = "daydot";
+
+function nowISO() {
+  return new Date().toISOString();
+}
+
+function safeParse(json) {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function defaultSeed() {
+  const createdAt = nowISO();
+  return {
+    tags: [
+      { id: 1, name: "健康", parentId: null, color: "#B48AA8", createdAt },
+      { id: 2, name: "清洁", parentId: null, color: "#7FA7B8", createdAt },
+      { id: 11, name: "月经", parentId: 1, color: null, createdAt },
+      { id: 12, name: "换洗睡衣", parentId: 2, color: null, createdAt },
+    ],
+    records: [
+      { id: 1001, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤", createdAt, updatedAt: createdAt },
+      { id: 1002, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤", createdAt, updatedAt: createdAt },
+      { id: 1003, tagId: 11, eventDate: "2026-04-23", note: "", createdAt, updatedAt: createdAt },
+      { id: 1004, tagId: null, eventDate: "2026-04-26", note: "", createdAt, updatedAt: createdAt },
+    ],
+    nextTagId: 13,
+    nextRecordId: 1005,
+  };
+}
+
+function normalizeState(raw) {
+  const seed = defaultSeed();
+  if (!raw || typeof raw !== "object") return seed;
+
+  const tags = Array.isArray(raw.tags) ? raw.tags : seed.tags;
+  const records = Array.isArray(raw.records) ? raw.records : seed.records;
+
+  const nextTagId = Number.isFinite(raw.nextTagId) ? raw.nextTagId : seed.nextTagId;
+  const nextRecordId = Number.isFinite(raw.nextRecordId) ? raw.nextRecordId : seed.nextRecordId;
+
+  return {
+    tags: tags.map((t) => ({
+      id: Number(t.id),
+      name: String(t.name || ""),
+      parentId: t.parentId == null ? null : Number(t.parentId),
+      color: t.color == null ? null : String(t.color),
+      createdAt: typeof t.createdAt === "string" ? t.createdAt : nowISO(),
+    })),
+    records: records.map((r) => ({
+      id: Number(r.id),
+      tagId: r.tagId == null ? null : Number(r.tagId),
+      eventDate: String(r.eventDate || ""),
+      note: String(r.note || ""),
+      createdAt: typeof r.createdAt === "string" ? r.createdAt : nowISO(),
+      updatedAt: typeof r.updatedAt === "string" ? r.updatedAt : (typeof r.createdAt === "string" ? r.createdAt : nowISO()),
+    })),
+    nextTagId,
+    nextRecordId,
+  };
+}
+
+function readState() {
+  const raw = safeParse(localStorage.getItem(LS_KEY) || "");
+  return normalizeState(raw);
+}
+
+function writeState(state) {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+
+export function ensureStore() {
+  const existing = safeParse(localStorage.getItem(LS_KEY) || "");
+  if (existing && typeof existing === "object") return;
+  writeState(defaultSeed());
+}
+
+export function getState() {
+  ensureStore();
+  return readState();
+}
+
+export function setState(next) {
+  ensureStore();
+  writeState(normalizeState(next));
+}
+
+export function listTags() {
+  return getState().tags.slice();
+}
+
+export function listRecords() {
+  return getState().records.slice();
+}
+
+export function getTagById(tagId) {
+  const id = Number(tagId);
+  if (!Number.isFinite(id)) return null;
+  return getState().tags.find((t) => t.id === id) ?? null;
+}
+
+export function getParentTag(tag) {
+  if (!tag) return null;
+  if (tag.parentId == null) return tag;
+  return getTagById(tag.parentId);
+}
+
+export function upsertTag({ id, name, parentId, color }) {
+  const s = getState();
+  const cleanName = String(name || "").trim();
+  if (!cleanName) return { ok: false, error: "标签名不能为空" };
+
+  const pId = parentId == null || parentId === "" ? null : Number(parentId);
+  if (pId != null && !Number.isFinite(pId)) return { ok: false, error: "父级标签无效" };
+
+  if (pId != null) {
+    const parent = s.tags.find((t) => t.id === pId && t.parentId == null);
+    if (!parent) return { ok: false, error: "请选择有效父级" };
+  }
+
+  // 约束：同父级下 name 唯一（父级本身的 parentId=null 视为同一组）
+  const groupKey = pId == null ? null : pId;
+  const dup = s.tags.find((t) => (t.parentId == null ? null : t.parentId) === groupKey && t.name === cleanName && Number(t.id) !== Number(id));
+  if (dup) return { ok: false, error: "同一父级下标签名重复" };
+
+  const ts = nowISO();
+  if (id != null && id !== "" && Number.isFinite(Number(id))) {
+    const tid = Number(id);
+    const idx = s.tags.findIndex((t) => t.id === tid);
+    if (idx >= 0) {
+      const prev = s.tags[idx];
+      s.tags[idx] = {
+        ...prev,
+        name: cleanName,
+        parentId: pId,
+        color: pId == null ? (color ? String(color) : prev.color) : null,
+      };
+      writeState(s);
+      return { ok: true, tag: s.tags[idx] };
+    }
+  }
+
+  const newId = s.nextTagId;
+  s.nextTagId += 1;
+  const tag = {
+    id: newId,
+    name: cleanName,
+    parentId: pId,
+    color: pId == null ? (color ? String(color) : "#C4A882") : null,
+    createdAt: ts,
+  };
+  s.tags.push(tag);
+  writeState(s);
+  return { ok: true, tag };
+}
+
+export function createRecord({ tagId, eventDate, note }) {
+  const s = getState();
+  const tId = tagId == null || tagId === "" ? null : Number(tagId);
+  if (tId != null && !Number.isFinite(tId)) return { ok: false, error: "标签无效" };
+
+  const iso = String(eventDate || "").trim();
+  if (!iso) return { ok: false, error: "请选择日期" };
+
+  const ts = nowISO();
+  const id = s.nextRecordId;
+  s.nextRecordId += 1;
+  s.records.push({
+    id,
+    tagId: tId,
+    eventDate: iso,
+    note: String(note || ""),
+    createdAt: ts,
+    updatedAt: ts,
+  });
+  writeState(s);
+  return { ok: true, recordId: id };
+}
+
+export function computeTagStats() {
+  const s = getState();
+  const counts = new Map();
+  const lastUsedAt = new Map();
+
+  for (const r of s.records) {
+    if (r.tagId == null) continue;
+    counts.set(r.tagId, (counts.get(r.tagId) || 0) + 1);
+    const prev = lastUsedAt.get(r.tagId);
+    const cand = r.updatedAt || r.createdAt;
+    if (!prev || cand > prev) lastUsedAt.set(r.tagId, cand);
+  }
+
+  // 父级聚合
+  for (const t of s.tags) {
+    if (t.parentId == null) continue;
+    const pId = t.parentId;
+    const c = counts.get(t.id) || 0;
+    if (c) counts.set(pId, (counts.get(pId) || 0) + c);
+
+    const childLast = lastUsedAt.get(t.id);
+    const parentLast = lastUsedAt.get(pId);
+    if (childLast && (!parentLast || childLast > parentLast)) lastUsedAt.set(pId, childLast);
+  }
+
+  return { counts, lastUsedAt };
+}
+
