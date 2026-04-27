@@ -42,7 +42,7 @@
 ### 色彩
 
 - `--bg`: #FAF6F1
-- `--card`: #FFFFFF
+- `--card`: #FDF9F4
 - `--secondary`: #F5EDE4
 - `--accent`: #C4A882
 - `--text`: #4A4543

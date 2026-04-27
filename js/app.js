@@ -5,6 +5,8 @@ import { initComboSearchAll } from "./components/comboSearch.js";
 import { initCalendarPopoverAll } from "./components/calendarPopover.js";
 import { initModalAll } from "./components/modal.js";
 import { initRecordListAll } from "./components/recordList.js";
+import { initClickFallback } from "./components/clickFallback.js";
+import { initPresetTagsAll } from "./components/presetTags.js";
 
 function mount() {
   const app = document.getElementById("app");
@@ -27,11 +29,22 @@ function mount() {
   initCalendarPopoverAll();
   initModalAll();
   initRecordListAll();
+  initClickFallback();
+  initPresetTagsAll();
 }
 
 window.addEventListener("hashchange", mount);
 window.addEventListener("DOMContentLoaded", () => {
   if (!location.hash) location.hash = "#/vault";
   mount();
+});
+
+document.addEventListener("dd:modalOpened", () => {
+  // 弹窗内容是动态插入的，需要补一次绑定
+  initComboSearchAll();
+  initCalendarPopoverAll();
+  initRecordListAll();
+  initPresetTagsAll();
+  lucide?.createIcons?.();
 });
 

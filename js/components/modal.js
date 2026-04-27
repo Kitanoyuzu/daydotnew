@@ -6,6 +6,7 @@ function ensurePortal() {
     portal.innerHTML = `
       <div class="dd-overlay" data-dd-overlay></div>
       <div data-dd-modal-slot></div>
+      <div class="dd-toast-wrap" data-dd-toast-wrap aria-live="polite" aria-atomic="true"></div>
     `;
   }
   return portal;
@@ -31,6 +32,8 @@ export function openModal(html, { ariaLabel = "弹窗" } = {}) {
 
   const close = () => closeModal();
   overlay.addEventListener("click", close, { once: true });
+
+  document.dispatchEvent(new CustomEvent("dd:modalOpened"));
 }
 
 export function closeModal() {
@@ -44,29 +47,63 @@ export function closeModal() {
   slot.innerHTML = "";
 }
 
+export function toast(message) {
+  const portal = ensurePortal();
+  if (!portal) return;
+  const wrap = portal.querySelector("[data-dd-toast-wrap]");
+  if (!wrap) return;
+
+  const id = `t_${Math.random().toString(16).slice(2)}`;
+  const el = document.createElement("div");
+  el.className = "dd-toast";
+  el.dataset.ddToast = id;
+  el.textContent = message;
+  wrap.appendChild(el);
+
+  requestAnimationFrame(() => el.classList.add("is-in"));
+  setTimeout(() => {
+    el.classList.remove("is-in");
+    setTimeout(() => el.remove(), 220);
+  }, 1400);
+}
+
 export function initModalAll() {
   ensurePortal();
+  if (document.documentElement.dataset.ddModalDelegated === "1") return;
+  document.documentElement.dataset.ddModalDelegated = "1";
 
-  document.querySelectorAll("[data-dd-modal-open]").forEach((btn) => {
-    if (btn.dataset.ddModalBound === "1") return;
-    btn.dataset.ddModalBound = "1";
-    btn.addEventListener("click", (e) => {
+  document.addEventListener("click", (e) => {
+    const action = e.target.closest?.("[data-dd-action]");
+    if (action) {
+      const type = action.getAttribute("data-dd-action");
+      if (type === "new-record-save") {
+        e.preventDefault();
+        toast("已保存（原型）");
+        closeModal();
+        return;
+      }
+    }
+
+    const openBtn = e.target.closest?.("[data-dd-modal-open]");
+    if (openBtn) {
       e.preventDefault();
-      const target = btn.getAttribute("data-dd-modal-open");
-      const template = target ? document.querySelector(`[data-dd-template="${target}"]`) : null;
-      if (!template) return;
-      openModal(template.innerHTML, { ariaLabel: btn.getAttribute("aria-label") || "弹窗" });
+      const target = openBtn.getAttribute("data-dd-modal-open");
+      const nodes = target ? Array.from(document.querySelectorAll(`[data-dd-template="${target}"]`)) : [];
+      const template = nodes.length ? nodes[nodes.length - 1] : null; // 优先使用全局模板（最后注入）
+      if (!template) {
+        toast("原型未接入：弹窗模板缺失");
+        return;
+      }
+      openModal(template.innerHTML, { ariaLabel: openBtn.getAttribute("aria-label") || "弹窗" });
       lucide?.createIcons?.();
-    });
-  });
+      return;
+    }
 
-  document.querySelectorAll("[data-dd-modal-close]").forEach((btn) => {
-    if (btn.dataset.ddModalBound === "1") return;
-    btn.dataset.ddModalBound = "1";
-    btn.addEventListener("click", (e) => {
+    const closeBtn = e.target.closest?.("[data-dd-modal-close]");
+    if (closeBtn) {
       e.preventDefault();
       closeModal();
-    });
+    }
   });
 }
 

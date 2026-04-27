@@ -8,7 +8,7 @@ export function renderVaultAll() {
         <button class="dd-icon-btn" type="button" aria-label="筛选"><i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i></button>
       </div>
 
-      <div class="dd-card flex items-center gap-3 px-[14px]" style="height: 52px; border-radius: var(--r-pill); box-shadow: var(--shadow-card);">
+      <div class="dd-card flex items-center gap-3 px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: var(--shadow-card);">
         <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
         <input class="flex-1 bg-transparent outline-none" placeholder="搜索记录…" />
         <span class="dd-pill" style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);">

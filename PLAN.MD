@@ -60,7 +60,7 @@ localStorage key: "daydot"
 
 ## 色系
 
---bg: #FAF6F1  --card: #FFFFFF  --secondary: #F5EDE4
+--bg: #FAF6F1  --card: #FDF9F4  --secondary: #F5EDE4
 --accent: #C4A882  --text: #4A4543  --text-sub: #9B918A  --border: #E8E0D8
 Tag 10 色：延续 v1 莫兰迪色谱
 

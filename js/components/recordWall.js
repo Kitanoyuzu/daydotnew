@@ -5,11 +5,15 @@ function card({ title, days, tag, parent, date, parentColor }) {
   const pText = `color-mix(in srgb, ${parentColor} 68%, var(--text))`;
   return `
     <a href="#/vault/tag/${tag === "换洗睡衣" ? 12 : 11}" class="dd-card block" style="padding: 16px 16px 14px;">
-      <div class="flex items-start justify-between gap-3">
-        <div class="text-[28px]" style="font-weight: 800; letter-spacing: -0.02em;">${title}</div>
+      <div class="flex items-baseline justify-between gap-3">
+        <div
+          class="text-[20px] truncate"
+          style="font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; max-width: 10.5ch;"
+          title="${title}"
+        >${title}</div>
         <div class="flex items-baseline gap-1" style="color: color-mix(in srgb, var(--accent) 88%, var(--text));">
           <div class="text-[34px]" style="font-weight: 300; letter-spacing: -0.03em;">${days}</div>
-          <div class="text-[14px]" style="color: var(--text-sub);">天</div>
+          <div class="text-[14px]" style="color: var(--text-sub); line-height: 1;">天</div>
         </div>
       </div>
       <div class="flex items-center justify-between pt-3">

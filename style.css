@@ -1,7 +1,8 @@
 :root{
   /* core palette */
   --bg: #FAF6F1;
-  --card: #FFFFFF;
+  /* surface：比背景更浅的米白，避免纯白 */
+  --card: #FDF9F4;
   --secondary: #F5EDE4;
   --accent: #C4A882;
   --text: #4A4543;
@@ -21,10 +22,12 @@
   --space-page-x: 18px;
   --space-section-y: 14px;
   --space-card-gap: 14px;
-  --control-h: 46px;
+  /* 单行控件统一高度（搜索框/选择框/输入行/日期行） */
+  --control-h: 52px;
   --nav-h: 72px;
   --fab-size: 48px;
-  --icon-btn-size: 36px;
+  /* 所有圆形 svg 按钮统一更小尺寸 */
+  --icon-btn-size: 32px;
 
   /* typography */
   --font-title: 24px;
@@ -57,6 +60,7 @@
   --record-card-pad-y: 12px;
   --record-row-gap: 10px;
   --record-actions-gap: 10px;
+  --pill-pad-x: 12px;
 }
 
 html, body{
@@ -158,11 +162,11 @@ body{
   background: var(--accent);
   color: var(--card);
   box-shadow: 0 10px 28px rgba(145, 120, 86, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid color-mix(in srgb, var(--card) 70%, transparent);
 }
 .dd-fab.is-dark{
   background: #2E2A28;
-  color: #FFFFFF;
+  color: var(--card);
   box-shadow: 0 10px 28px rgba(20, 18, 16, 0.28);
 }
 
@@ -205,6 +209,7 @@ body{
 .dd-combo-input{
   border-radius: var(--r-pill);
   transition: border-radius 120ms ease;
+  height: var(--control-h);
 }
 .dd-combo[data-dd-open="1"] .dd-combo-input{
   border-bottom-left-radius: 18px;
@@ -214,7 +219,7 @@ body{
   position: absolute;
   left: 0;
   right: 0;
-  top: 52px;
+  top: var(--control-h);
   background: color-mix(in srgb, var(--bg) 70%, var(--card));
   border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
   border-top: none;
@@ -255,7 +260,7 @@ body{
 
 .dd-record-row{
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
@@ -265,7 +270,7 @@ body{
 
 .dd-record-pills{
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   min-width: 0;
 }
@@ -281,6 +286,7 @@ body{
   color: var(--text);
   font-weight: 700;
   min-height: 20px;
+  padding-left: var(--pill-pad-x); /* 让备注起点与胶囊内部文字起点对齐 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -303,6 +309,38 @@ body{
 .dd-record-card[data-dd-active="1"] .dd-record-actions{
   opacity: 1;
   pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Toast */
+.dd-toast-wrap{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--nav-h) + 18px);
+  width: min(calc(100% - 28px), var(--app-max-w));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 80;
+}
+.dd-toast{
+  align-self: center;
+  max-width: 100%;
+  background: rgba(46, 42, 40, 0.92);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 13px;
+  box-shadow: 0 12px 34px rgba(20, 18, 16, 0.26);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.dd-toast.is-in{
+  opacity: 1;
   transform: translateY(0);
 }
 

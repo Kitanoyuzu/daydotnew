@@ -5,13 +5,11 @@ export function renderComboSearch({ id, placeholder, rightIcon, rightHref, mode,
     ? `<a class="dd-icon-btn" href="${rightHref || "#"}" data-dd-combo-right="${id}" aria-label="快捷入口"><i data-lucide="${rightIcon}" class="w-[18px] h-[18px]"></i></a>`
     : "";
 
-  const isCompact = variant === "compact";
-  const h = isCompact ? 34 : 52;
-  const icon = isCompact ? "" : `<i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>`;
+  const icon = `<i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>`;
 
   return `
     <div class="dd-combo" data-dd-combo-root="${id}" data-dd-combo-mode="${mode}">
-      <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px] shadow-[var(--shadow-card)]" style="height: ${h}px; border-radius: var(--r-pill);">
+      <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px] shadow-[var(--shadow-card)]" style="border-radius: var(--r-pill);">
         ${icon}
         <input
           class="flex-1 bg-transparent outline-none placeholder:opacity-100"
@@ -19,7 +17,6 @@ export function renderComboSearch({ id, placeholder, rightIcon, rightHref, mode,
           data-dd-combo-input="${id}"
           placeholder="${placeholder}"
           autocomplete="off"
-          ${isCompact ? "readonly" : ""}
         />
         ${right}
       </div>

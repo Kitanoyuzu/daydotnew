@@ -28,7 +28,7 @@ export function renderCalendarPage() {
 
         <div class="flex items-center justify-between pt-4">
           <div class="text-[13px]" style="color: var(--text-sub);" data-dd-cal-date-label>${todayISO}</div>
-          <button class="dd-icon-btn" type="button" aria-label="新增"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
+          <button class="dd-icon-btn" type="button" aria-label="新增记录" data-dd-modal-open="new-record"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
         </div>
 
         <div class="pt-8 pb-2 text-center text-[14px]" style="color: var(--text-sub);" data-dd-cal-empty>这一天没有记录</div>
