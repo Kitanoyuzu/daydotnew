@@ -17,12 +17,13 @@ export function renderVaultAll() {
     <section class="flex flex-col gap-[14px]">
       <div class="flex items-center justify-between">
         <a href="#/vault" class="dd-icon-btn" aria-label="返回"><i data-lucide="chevron-left" class="w-[18px] h-[18px]"></i></a>
-        <button class="dd-icon-btn" type="button" aria-label="筛选"><i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i></button>
+        <button class="dd-icon-btn" type="button" aria-label="筛选" data-dd-modal-open="vaultall-filter"><i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i></button>
       </div>
 
       <div class="dd-card flex items-center gap-3 px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: var(--shadow-card);">
         <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
         <input class="flex-1 bg-transparent outline-none" placeholder="搜索记录…" data-dd-vaultall-q />
+        <input type="hidden" data-dd-vaultall-tagfilter value="" />
         <button
           type="button"
           class="dd-pill"
@@ -59,10 +60,21 @@ export function initVaultAllAll() {
   const computeFiltered = () => {
     const q = String(latest("[data-dd-vaultall-q]")?.value || "").trim();
     const date = String(latest('[data-dd-cal-input="vaultall-datefilter"]')?.value || "").trim();
+    const tagFilter = String(latest("[data-dd-vaultall-tagfilter]")?.value || "").trim(); // "p:ID" | "t:ID" | ""
     const q2 = q.toLowerCase();
     return listRecords()
       .filter((r) => {
         if (date && r.eventDate !== date) return false;
+        if (tagFilter) {
+          const t = r.tagId != null ? getTagById(r.tagId) : null;
+          if (tagFilter.startsWith("t:")) {
+            const id = Number(tagFilter.slice(2));
+            if (!Number.isFinite(id) || String(r.tagId) !== String(id)) return false;
+          } else if (tagFilter.startsWith("p:")) {
+            const id = Number(tagFilter.slice(2));
+            if (!Number.isFinite(id) || String(t?.parentId) !== String(id)) return false;
+          }
+        }
         if (!q2) return true;
         const t = r.tagId != null ? getTagById(r.tagId) : null;
         const p = getParentTag(t);
@@ -91,6 +103,8 @@ export function initVaultAllAll() {
   document.addEventListener("input", (e) => {
     if (e.target?.closest?.("[data-dd-vaultall-q]")) rerender();
   });
+
+  document.addEventListener("dd:vaultallFilterChanged", rerender);
 
   document.addEventListener("click", (e) => {
     const todayBtn = e.target.closest?.("[data-dd-vaultall-today]");

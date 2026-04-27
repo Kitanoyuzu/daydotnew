@@ -183,6 +183,31 @@ export function initModalAll() {
         if (noteInput) noteInput.value = "";
         return;
       }
+
+      if (type === "vaultall-filter-clear") {
+        e.preventDefault();
+        // 清除 vault/all 的筛选状态（关键词/日期/标签）
+        const q = latest("[data-dd-vaultall-q]");
+        if (q) q.value = "";
+
+        const date = latest('[data-dd-cal-input="vaultall-datefilter"]');
+        if (date) date.value = "";
+        const dateLabel = latest('[data-dd-cal-trigger="vaultall-datefilter"]')?.querySelector?.("[data-dd-cal-display-text]");
+        if (dateLabel) dateLabel.textContent = "日期";
+
+        const tagHidden = latest("[data-dd-vaultall-tagfilter]");
+        if (tagHidden) tagHidden.value = "";
+
+        // 同步弹窗内 combobox（如果存在）
+        const tagRoot = latest('[data-dd-combo-root="vaultall-tag-any"]');
+        const tagInput = latest('[data-dd-combo-input="vaultall-tag-any"]');
+        if (tagRoot) delete tagRoot.dataset.ddValue;
+        if (tagInput) tagInput.value = "";
+
+        document.dispatchEvent(new CustomEvent("dd:vaultallFilterChanged"));
+        toast("已清除");
+        return;
+      }
     }
 
     const openBtn = e.target.closest?.("[data-dd-modal-open]");
@@ -226,6 +251,37 @@ export function initModalAll() {
 
         const iso = String(openBtn.dataset.ddNewDateIso || "").trim();
         if (dateInput && iso) dateInput.value = iso;
+      }
+
+      if (target === "vaultall-filter") {
+        // 打开筛选弹窗时：把当前筛选状态同步进弹窗
+        const tagHidden = latest("[data-dd-vaultall-tagfilter]");
+        const tagValue = String(tagHidden?.value || "").trim();
+        const tagRoot = latest('[data-dd-combo-root="vaultall-tag-any"]');
+        const tagInput = latest('[data-dd-combo-input="vaultall-tag-any"]');
+        if (tagRoot) {
+          if (tagValue) tagRoot.dataset.ddValue = tagValue;
+          else delete tagRoot.dataset.ddValue;
+        }
+        if (tagInput) {
+          if (!tagValue) tagInput.value = "";
+          else if (tagValue.startsWith("p:") || tagValue.startsWith("t:")) {
+            const id = Number(tagValue.slice(2));
+            const t = Number.isFinite(id) ? getTagById(id) : null;
+            tagInput.value = t?.name || "";
+          } else tagInput.value = "";
+        }
+
+        // 选择后实时写回页面隐藏状态
+        if (tagRoot && tagRoot.dataset.ddVaultAllBound !== "1") {
+          tagRoot.dataset.ddVaultAllBound = "1";
+          tagRoot.addEventListener("dd:comboSelect", (ev) => {
+            const v = String(ev?.detail?.value || "");
+            const hidden = latest("[data-dd-vaultall-tagfilter]");
+            if (hidden) hidden.value = v;
+            document.dispatchEvent(new CustomEvent("dd:vaultallFilterChanged"));
+          });
+        }
       }
 
       if (target === "edit-record") {

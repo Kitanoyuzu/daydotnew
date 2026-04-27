@@ -104,6 +104,66 @@ function buildOptions({ q, mode }) {
   const parentTags = allTags.filter((t) => t.parentId == null);
   const leafTags = allTags.filter((t) => t.parentId != null);
 
+  if (mode === "tagAnyFilter") {
+    const q2 = query;
+    const parents = q2 ? parentTags.filter((p) => p.name.includes(q2)) : parentTags;
+    const leafs = q2
+      ? leafTags.filter((t) => t.name.includes(q2) || (getParentTag(t)?.name ?? "").includes(q2))
+      : leafTags;
+
+    const parentItems = parents
+      .map((p) => {
+        const c = p.color || "#C4A882";
+        return `
+          <button
+            class="dd-combo-item"
+            type="button"
+            data-dd-combo-option="p:${p.id}"
+            data-dd-combo-value="p:${p.id}"
+            data-dd-combo-label="${p.name}"
+          >
+            <span class="text-[14px]" style="color: var(--text);">${p.name}</span>
+            <span style="width: 16px; height: 16px; border-radius: 999px; display:block; border: 2px solid ${c};"></span>
+          </button>
+        `;
+      })
+      .join("");
+
+    const leafItems = leafs
+      .map((t) => {
+        const parent = getParentTag(t);
+        const tint = parent?.color || "#C4A882";
+        return `
+          <button
+            class="dd-combo-item"
+            type="button"
+            data-dd-combo-option="t:${t.id}"
+            data-dd-combo-value="t:${t.id}"
+            data-dd-combo-label="${t.name}"
+          >
+            <span class="text-[14px]" style="color: var(--text);">${t.name}</span>
+            <span class="dd-pill" style="background: color-mix(in srgb, ${tint} 18%, var(--card)); color: color-mix(in srgb, ${tint} 68%, var(--text));">${parent?.name ?? ""}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    if (!parentItems && !leafItems) {
+      return `<div class="px-3 py-3 text-[12px]" style="color: var(--text-sub);">没有匹配项</div>`;
+    }
+
+    return `
+      <div class="flex flex-col gap-1">
+        <button type="button" class="dd-combo-item" data-dd-combo-option="all" data-dd-combo-value="" data-dd-combo-label="全部">
+          <span class="text-[14px]" style="color: var(--text);">全部</span>
+          <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);"> </span>
+        </button>
+        ${parentItems}
+        ${leafItems}
+      </div>
+    `;
+  }
+
   if (mode === "tagFilter") {
     // 统一：仍然展示“子级在左、父级胶囊在右”的同一行样式
     const items = query

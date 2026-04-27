@@ -72,6 +72,52 @@ function writeState(state) {
   localStorage.setItem(LS_KEY, JSON.stringify(state));
 }
 
+function cleanupHierarchy(state) {
+  // 约束：只允许“父级-子级”成对存在
+  // - 子级必须有有效父级（parentId 指向存在且 parentId=null 的父级）
+  // - 父级必须至少有一个子级
+  // - records.tagId 若指向不存在的 tag，则置空（记录保留）
+  const s = normalizeState(state);
+
+  // 去掉非法/空名称
+  s.tags = s.tags.filter((t) => String(t.name || "").trim());
+
+  const parentById = new Map(s.tags.filter((t) => t.parentId == null).map((t) => [t.id, t]));
+  const childById = new Map(s.tags.filter((t) => t.parentId != null).map((t) => [t.id, t]));
+
+  // 删除无父级/父级非法的子级
+  for (const [id, t] of childById) {
+    const pid = t.parentId;
+    if (pid == null || !Number.isFinite(pid) || !parentById.has(pid)) childById.delete(id);
+  }
+
+  // 计算父级拥有的子级数量
+  const childCount = new Map();
+  for (const [, t] of childById) {
+    childCount.set(t.parentId, (childCount.get(t.parentId) || 0) + 1);
+  }
+
+  // 删除没有子级的父级
+  for (const [id] of parentById) {
+    if (!childCount.get(id)) parentById.delete(id);
+  }
+
+  const keptTagIds = new Set([...parentById.keys(), ...childById.keys()]);
+
+  // 记录引用清理：tag 不存在就置空
+  s.records = s.records.map((r) => (r.tagId != null && !keptTagIds.has(r.tagId) ? { ...r, tagId: null } : r));
+
+  s.tags = [...parentById.values(), ...childById.values()];
+
+  // 修正 next ids
+  const maxTagId = s.tags.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0);
+  const maxRecordId = s.records.reduce((m, r) => Math.max(m, Number(r.id) || 0), 0);
+  s.nextTagId = Math.max(Number(s.nextTagId) || 1, maxTagId + 1);
+  s.nextRecordId = Math.max(Number(s.nextRecordId) || 1, maxRecordId + 1);
+
+  return s;
+}
+
 function emitStoreChanged() {
   document.dispatchEvent(new CustomEvent("dd:storeChanged"));
 }
@@ -90,7 +136,7 @@ export function getState() {
 
 export function setState(next) {
   ensureStore();
-  writeState(normalizeState(next));
+  writeState(cleanupHierarchy(next));
   emitStoreChanged();
 }
 
@@ -122,7 +168,14 @@ export function upsertTag({ id, name, parentId, color }) {
   const pId = parentId == null || parentId === "" ? null : Number(parentId);
   if (pId != null && !Number.isFinite(pId)) return { ok: false, error: "父级标签无效" };
 
-  if (pId != null) {
+  // 约束：
+  // - 子级必须有父级（parentId!=null 且指向有效父级）
+  // - 父级允许创建/改名/改色，但父级若最终无子级会在“子级变更后”被自动清理
+  const prevTag = id != null && id !== "" ? s.tags.find((t) => t.id === Number(id)) : null;
+  const isParentOp = pId == null && (prevTag?.parentId == null || prevTag == null);
+
+  if (!isParentOp) {
+    if (pId == null) return { ok: false, error: "每个子级必须选择父级" };
     const parent = s.tags.find((t) => t.id === pId && t.parentId == null);
     if (!parent) return { ok: false, error: "请选择有效父级" };
   }
@@ -144,9 +197,11 @@ export function upsertTag({ id, name, parentId, color }) {
         parentId: pId,
         color: pId == null ? (color ? String(color) : prev.color) : null,
       };
-      writeState(s);
+      // 父级改名/改色不触发“删无子级父级”，避免 tagsManager 的“先建父级再建子级”流程被提前清掉
+      writeState(isParentOp ? normalizeState(s) : cleanupHierarchy(s));
       emitStoreChanged();
-      return { ok: true, tag: s.tags[idx] };
+      const next = readState();
+      return { ok: true, tag: next.tags.find((t) => t.id === tid) ?? null };
     }
   }
 
@@ -160,7 +215,7 @@ export function upsertTag({ id, name, parentId, color }) {
     createdAt: ts,
   };
   s.tags.push(tag);
-  writeState(s);
+  writeState(isParentOp ? normalizeState(s) : cleanupHierarchy(s));
   emitStoreChanged();
   return { ok: true, tag };
 }
