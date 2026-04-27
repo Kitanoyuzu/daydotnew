@@ -1,0 +1,198 @@
+:root{
+  /* core palette */
+  --bg: #FAF6F1;
+  --card: #FFFFFF;
+  --secondary: #F5EDE4;
+  --accent: #C4A882;
+  --text: #4A4543;
+  --text-sub: #9B918A;
+  --border: #E8E0D8;
+
+  /* radii */
+  --r-pill: 999px;
+  --r-card: 24px;
+  --r-fab: 999px;
+
+  /* shadows */
+  --shadow-card: 0 8px 24px rgba(103, 89, 77, 0.08);
+  --shadow-float: 0 18px 48px rgba(103, 89, 77, 0.18);
+
+  /* spacing & sizes */
+  --space-page-x: 18px;
+  --space-section-y: 14px;
+  --space-card-gap: 14px;
+  --control-h: 46px;
+  --nav-h: 72px;
+  --fab-size: 48px;
+  --icon-btn-size: 36px;
+
+  /* typography */
+  --font-title: 24px;
+  --font-days: 34px;
+  --font-body: 14px;
+  --font-caption: 12px;
+  --weight-strong: 700;
+
+  /* combo */
+  --combo-h: var(--control-h);
+  --combo-pad-x: 14px;
+  --combo-icon-size: 18px;
+  --combo-menu-gap: 8px;
+  --combo-menu-max-h: 240px;
+
+  /* calendar */
+  --calendar-cell-size: 42px;
+  --calendar-dot-size: 6px;
+  --calendar-selected-bg: var(--accent);
+  --calendar-footer-h: 44px;
+
+  /* overlay */
+  --modal-overlay: rgba(20, 18, 16, 0.38);
+
+  /* app frame (mobile-first) */
+  --app-max-w: 430px;
+}
+
+html, body{
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-body);
+}
+
+body{
+  -webkit-tap-highlight-color: transparent;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+#app{
+  min-height: 100%;
+}
+
+.dd-shell{
+  min-height: 100svh;
+  max-width: var(--app-max-w);
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 12px) var(--space-page-x) calc(var(--nav-h) + max(env(safe-area-inset-bottom), 12px));
+}
+
+.dd-card{
+  background: var(--card);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+}
+
+.dd-pill{
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: var(--secondary);
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.dd-icon-btn{
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  border-radius: var(--r-fab);
+  background: color-mix(in srgb, var(--secondary) 65%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dd-icon-btn:active{
+  transform: translateY(1px);
+}
+
+.dd-bottom-nav{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, var(--app-max-w));
+  bottom: 0;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding: 10px var(--space-page-x) calc(10px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--bg) 84%, var(--card));
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 18px;
+  z-index: 50;
+}
+
+.dd-bottom-nav .dd-nav-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: color-mix(in srgb, var(--text-sub) 90%, var(--bg));
+  font-size: 12px;
+  user-select: none;
+}
+
+.dd-bottom-nav .dd-nav-item.is-active{
+  color: color-mix(in srgb, var(--text) 85%, var(--accent));
+}
+
+.dd-fab{
+  width: var(--fab-size);
+  height: var(--fab-size);
+  border-radius: var(--r-fab);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--card);
+  box-shadow: 0 10px 28px rgba(145, 120, 86, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.dd-fab.is-dark{
+  background: #2E2A28;
+  color: #FFFFFF;
+  box-shadow: 0 10px 28px rgba(20, 18, 16, 0.28);
+}
+
+.dd-portal{
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.dd-overlay{
+  position: absolute;
+  inset: 0;
+  background: var(--modal-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.dd-overlay.is-open{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dd-float{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - (var(--space-page-x) * 2)), calc(var(--app-max-w) - (var(--space-page-x) * 2)));
+  border-radius: var(--r-card);
+  background: color-mix(in srgb, var(--bg) 70%, var(--card));
+  box-shadow: var(--shadow-float);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; }
+}
+
