@@ -43,6 +43,16 @@ window.addEventListener("DOMContentLoaded", () => {
   mount();
 });
 
+let storeRerenderScheduled = false;
+document.addEventListener("dd:storeChanged", () => {
+  if (storeRerenderScheduled) return;
+  storeRerenderScheduled = true;
+  requestAnimationFrame(() => {
+    storeRerenderScheduled = false;
+    mount();
+  });
+});
+
 document.addEventListener("dd:modalOpened", () => {
   // 弹窗内容是动态插入的，需要补一次绑定
   initComboSearchAll();

@@ -20,7 +20,7 @@ function card({ title, days, tag, parent, date, parentColor }) {
         <div class="flex items-center gap-10">
           <span class="dd-pill" style="background: color-mix(in srgb, ${parentColor} 16%, var(--card)); color: ${pText};">${parent}</span>
         </div>
-        <div class="text-[12px]" style="color: var(--text-sub);">${date.replaceAll("-", "月").replace("月", "月")}</div>
+        <div class="text-[12px]" style="color: var(--text-sub);">${date}</div>
       </div>
     </a>
   `;

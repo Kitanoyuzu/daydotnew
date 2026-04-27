@@ -39,7 +39,7 @@ export function renderVaultTag({ id }) {
 
       <div class="flex items-center justify-between">
         <div class="text-[15px]" style="font-weight: 800; color: var(--text);">历史记录</div>
-        <button class="dd-icon-btn" type="button" aria-label="新增记录" data-dd-modal-open="new-record"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
+        <button class="dd-icon-btn" type="button" aria-label="新增记录" data-dd-modal-open="new-record" data-dd-new-tag-id="${Number.isFinite(tagId) ? tagId : ""}"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
       </div>
 
       ${renderRecordList({

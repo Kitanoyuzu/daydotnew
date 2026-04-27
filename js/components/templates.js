@@ -15,6 +15,7 @@ export function renderGlobalTemplates() {
 }
 
 function editRecordTemplate() {
+  const todayISO = formatISO(new Date());
   return `
     <div class="flex items-center justify-between pb-3">
       <div class="text-[16px]" style="font-weight: 800; color: var(--text);">编辑记录</div>
@@ -23,7 +24,7 @@ function editRecordTemplate() {
 
     <div class="flex flex-col gap-[12px]">
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">日期</div>
-      ${renderCalendarField({ id: "modal-edit-date", value: "2026-04-25", placeholder: "选择日期" })}
+      ${renderCalendarField({ id: "modal-edit-date", value: todayISO, placeholder: "选择日期" })}
 
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">标签</div>
       ${renderComboSearch({
@@ -38,12 +39,12 @@ function editRecordTemplate() {
       <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">备注</div>
       <div class="dd-card dd-combo-input flex items-center gap-3 px-[14px]">
         <i data-lucide="pencil" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
-        <input class="flex-1 bg-transparent outline-none" value="米白长袖长裤" />
+        <input class="flex-1 bg-transparent outline-none" data-dd-input="modal-edit-note" value="" />
       </div>
 
       <div class="flex items-center gap-3 pt-2">
         <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-modal-close>取消</button>
-        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); box-shadow:none;">保存</button>
+        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); box-shadow:none;" data-dd-action="edit-record-save">保存</button>
       </div>
     </div>
   `;

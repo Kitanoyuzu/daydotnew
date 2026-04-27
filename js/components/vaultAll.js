@@ -1,6 +1,18 @@
 import { renderRecordList } from "./recordList.js";
+import { formatISO } from "./calendarCore.js";
+import { getParentTag, getTagById, listRecords } from "../store.js";
 
 export function renderVaultAll() {
+  const records = listRecords()
+    .slice()
+    .sort((a, b) => {
+      if (b.eventDate !== a.eventDate) return b.eventDate > a.eventDate ? 1 : -1;
+      const ua = a.updatedAt || a.createdAt || "";
+      const ub = b.updatedAt || b.createdAt || "";
+      if (ub !== ua) return ub > ua ? 1 : -1;
+      return b.id - a.id;
+    });
+
   return `
     <section class="flex flex-col gap-[14px]">
       <div class="flex items-center justify-between">
@@ -10,7 +22,7 @@ export function renderVaultAll() {
 
       <div class="dd-card flex items-center gap-3 px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow: var(--shadow-card);">
         <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
-        <input class="flex-1 bg-transparent outline-none" placeholder="搜索记录…" />
+        <input class="flex-1 bg-transparent outline-none" placeholder="搜索记录…" data-dd-vaultall-q />
         <button
           type="button"
           class="dd-pill"
@@ -22,61 +34,79 @@ export function renderVaultAll() {
           <span data-dd-cal-display-text>日期</span>
           <input type="hidden" data-dd-cal-input="vaultall-datefilter" value="" />
         </button>
-        <span class="dd-pill" style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);">
+        <button type="button" class="dd-pill" data-dd-vaultall-today style="height: 30px; background: color-mix(in srgb, var(--bg) 70%, var(--card)); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text);">
           <i data-lucide="funnel" class="w-[14px] h-[14px]" style="margin-right: 6px;"></i>今天
-        </span>
+        </button>
       </div>
 
       ${renderRecordList({
         id: "vault-all-records",
-        records: [
-          { id: 1004, tagId: null, eventDate: "2026-04-26", note: "" },
-          { id: 1001, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤" },
-          { id: 1002, tagId: 12, eventDate: "2026-04-25", note: "米白长袖长裤" },
-          { id: 1003, tagId: 11, eventDate: "2026-04-23", note: "" },
-        ],
+        records,
       })}
     </section>
-
-    <div class="hidden" data-dd-template="edit-record">
-      ${editModalTemplate()}
-    </div>
   `;
 }
 
-function editModalTemplate() {
-  return `
-    <div class="flex items-center justify-between pb-3">
-      <div class="text-[16px]" style="font-weight: 800; color: var(--text);">编辑记录</div>
-      <button class="dd-icon-btn" type="button" aria-label="关闭" data-dd-modal-close><i data-lucide="x" class="w-[18px] h-[18px]"></i></button>
-    </div>
+export function initVaultAllAll() {
+  if (document.documentElement.dataset.ddVaultAllDelegated === "1") return;
+  document.documentElement.dataset.ddVaultAllDelegated = "1";
 
-    <div class="flex flex-col gap-[12px]">
-      <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">日期</div>
-      <div class="dd-card flex items-center px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));">
-        <i data-lucide="calendar" class="w-[18px] h-[18px]" style="color: var(--text-sub); margin-right: 10px;"></i>
-        <input class="flex-1 bg-transparent outline-none" value="2026-04-25" />
-      </div>
+  const latest = (selector) => {
+    const nodes = Array.from(document.querySelectorAll(selector));
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  };
 
-      <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">Tag</div>
-      <div class="dd-card flex items-center justify-between px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));">
-        <div class="text-[14px]" style="color: var(--text);">换洗睡衣</div>
-        <div class="flex items-center gap-3">
-          <span class="dd-pill" style="background: color-mix(in srgb, #7FA7B8 18%, var(--card)); color: color-mix(in srgb, #7FA7B8 70%, var(--text));">清洁</span>
-          <span class="text-[12px]" style="color: var(--text-sub);">选择</span>
-        </div>
-      </div>
+  const computeFiltered = () => {
+    const q = String(latest("[data-dd-vaultall-q]")?.value || "").trim();
+    const date = String(latest('[data-dd-cal-input="vaultall-datefilter"]')?.value || "").trim();
+    const q2 = q.toLowerCase();
+    return listRecords()
+      .filter((r) => {
+        if (date && r.eventDate !== date) return false;
+        if (!q2) return true;
+        const t = r.tagId != null ? getTagById(r.tagId) : null;
+        const p = getParentTag(t);
+        const hay = `${t?.name || ""} ${p?.name || ""} ${r.note || ""}`.toLowerCase();
+        return hay.includes(q2);
+      })
+      .slice()
+      .sort((a, b) => {
+        if (b.eventDate !== a.eventDate) return b.eventDate > a.eventDate ? 1 : -1;
+        const ua = a.updatedAt || a.createdAt || "";
+        const ub = b.updatedAt || b.createdAt || "";
+        if (ub !== ua) return ub > ua ? 1 : -1;
+        return b.id - a.id;
+      });
+  };
 
-      <div class="text-[13px]" style="color: var(--text-sub); font-weight: 700;">备注</div>
-      <div class="dd-card flex items-center px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card));">
-        <input class="flex-1 bg-transparent outline-none" value="米白长袖长裤" />
-      </div>
+  const rerender = () => {
+    const wrap = latest('[data-dd-record-list="vault-all-records"]')?.parentElement;
+    if (!wrap) return;
+    const listRoot = latest('[data-dd-record-list="vault-all-records"]');
+    if (!listRoot) return;
+    listRoot.outerHTML = renderRecordList({ id: "vault-all-records", records: computeFiltered() });
+    lucide?.createIcons?.();
+  };
 
-      <div class="flex items-center gap-3 pt-2">
-        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-modal-close>取消</button>
-        <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); box-shadow:none;">保存</button>
-      </div>
-    </div>
-  `;
+  document.addEventListener("input", (e) => {
+    if (e.target?.closest?.("[data-dd-vaultall-q]")) rerender();
+  });
+
+  document.addEventListener("click", (e) => {
+    const todayBtn = e.target.closest?.("[data-dd-vaultall-today]");
+    if (!todayBtn) return;
+    const input = latest('[data-dd-cal-input="vaultall-datefilter"]');
+    if (input) input.value = formatISO(new Date());
+    const label = latest('[data-dd-cal-trigger="vaultall-datefilter"]')?.querySelector?.("[data-dd-cal-display-text]");
+    if (label && input) label.textContent = input.value;
+    rerender();
+  });
+
+  document.addEventListener("click", (e) => {
+    // Calendar popover will set input.value; we rerender after it closes by listening to next tick
+    const calTrigger = e.target.closest?.('[data-dd-cal-trigger="vaultall-datefilter"]');
+    if (!calTrigger) return;
+    setTimeout(rerender, 0);
+  });
 }
 

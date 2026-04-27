@@ -66,8 +66,9 @@ export function initRecordListAll() {
     if (actionBtn) {
       e.preventDefault();
       const action = actionBtn.getAttribute("data-dd-record-action");
+      const recordId = Number(actionBtn.closest?.("[data-record-id]")?.getAttribute?.("data-record-id") || "");
       if (action === "save") {
-        toast("已保存（原型）");
+        toast("已保存");
         return;
       }
       if (action === "delete") {
@@ -77,10 +78,10 @@ export function initRecordListAll() {
               <div class="text-[16px]" style="font-weight: 800; color: var(--text);">确认删除？</div>
               <button class="dd-icon-btn" type="button" aria-label="关闭" data-dd-modal-close><i data-lucide="x" class="w-[18px] h-[18px]"></i></button>
             </div>
-            <div class="text-[13px]" style="color: var(--text-sub); padding-bottom: 14px;">删除后不可恢复（原型提示）。</div>
+            <div class="text-[13px]" style="color: var(--text-sub); padding-bottom: 14px;">删除后不可恢复。</div>
             <div class="flex items-center gap-3">
               <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-modal-close>取消</button>
-              <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, #6D4C45 76%, #2E2A28); color: var(--card); box-shadow:none;" data-dd-modal-close>删除</button>
+              <button class="flex-1 dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, #6D4C45 76%, #2E2A28); color: var(--card); box-shadow:none;" data-dd-action="record-delete-confirm" data-dd-record-id="${Number.isFinite(recordId) ? recordId : ""}">删除</button>
             </div>
           `,
           { ariaLabel: "删除确认" },

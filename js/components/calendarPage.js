@@ -27,7 +27,7 @@ export function renderCalendarPage() {
 
         <div class="flex items-center justify-between pt-4">
           <div class="text-[13px]" style="color: var(--text-sub);" data-dd-cal-date-label>${todayISO}</div>
-          <button class="dd-icon-btn" type="button" aria-label="新增记录" data-dd-modal-open="new-record"><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
+          <button class="dd-icon-btn" type="button" aria-label="新增记录" data-dd-modal-open="new-record" data-dd-cal-add-btn><i data-lucide="plus" class="w-[18px] h-[18px]"></i></button>
         </div>
 
         <div class="pt-8 pb-2 text-center text-[14px]" style="color: var(--text-sub);" data-dd-cal-empty>这一天没有记录</div>
@@ -93,8 +93,16 @@ export function initCalendarPageAll() {
       const list = wrap.querySelector("[data-dd-cal-timeline]");
       const empty = wrap.querySelector("[data-dd-cal-empty]");
       const label = wrap.querySelector("[data-dd-cal-date-label]");
+      const addBtn = wrap.querySelector("[data-dd-cal-add-btn]");
       if (label) label.textContent = selected || "";
       if (!list || !empty) return;
+
+      // 新增记录入口：预填选中日期 / 当前筛选 tag
+      if (addBtn) {
+        addBtn.dataset.ddNewDateIso = selected || "";
+        if (tagId) addBtn.dataset.ddNewTagId = tagId;
+        else delete addBtn.dataset.ddNewTagId;
+      }
 
       const items = listRecords()
         .filter((r) => r.eventDate === selected && (!tagId || String(r.tagId) === String(tagId)))

@@ -1,5 +1,6 @@
 import { renderComboSearch } from "../components/comboSearch.js";
 import { renderRecordWall } from "../components/recordWall.js";
+import { initVaultPageAll } from "../components/vaultPage.js";
 
 export function pageVault() {
   const html = `
@@ -12,10 +13,12 @@ export function pageVault() {
         mode: "search",
       })}
 
-      ${renderRecordWall()}
+      <div data-dd-vault-wall>
+        ${renderRecordWall()}
+      </div>
     </section>
   `;
 
-  return { html, afterMount() {} };
+  return { html, afterMount() { initVaultPageAll(); } };
 }
 

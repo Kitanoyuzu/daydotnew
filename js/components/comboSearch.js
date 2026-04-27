@@ -133,7 +133,8 @@ function buildOptions({ q, mode }) {
   }
 
   if (mode === "tagChild") {
-    const parentRoot = document.querySelector?.('[data-dd-combo-root="tags-parent"]');
+    const parentNodes = Array.from(document.querySelectorAll?.('[data-dd-combo-root="tags-parent"]') || []);
+    const parentRoot = parentNodes.length ? parentNodes[parentNodes.length - 1] : null;
     const parentIdRaw = parentRoot?.dataset?.ddValue ?? "";
     const parentId = Number(parentIdRaw);
     const scoped = Number.isFinite(parentId) ? leafTags.filter((t) => t.parentId === parentId) : leafTags;

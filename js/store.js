@@ -72,10 +72,15 @@ function writeState(state) {
   localStorage.setItem(LS_KEY, JSON.stringify(state));
 }
 
+function emitStoreChanged() {
+  document.dispatchEvent(new CustomEvent("dd:storeChanged"));
+}
+
 export function ensureStore() {
   const existing = safeParse(localStorage.getItem(LS_KEY) || "");
   if (existing && typeof existing === "object") return;
   writeState(defaultSeed());
+  emitStoreChanged();
 }
 
 export function getState() {
@@ -86,6 +91,7 @@ export function getState() {
 export function setState(next) {
   ensureStore();
   writeState(normalizeState(next));
+  emitStoreChanged();
 }
 
 export function listTags() {
@@ -139,6 +145,7 @@ export function upsertTag({ id, name, parentId, color }) {
         color: pId == null ? (color ? String(color) : prev.color) : null,
       };
       writeState(s);
+      emitStoreChanged();
       return { ok: true, tag: s.tags[idx] };
     }
   }
@@ -154,6 +161,7 @@ export function upsertTag({ id, name, parentId, color }) {
   };
   s.tags.push(tag);
   writeState(s);
+  emitStoreChanged();
   return { ok: true, tag };
 }
 
@@ -177,7 +185,53 @@ export function createRecord({ tagId, eventDate, note }) {
     updatedAt: ts,
   });
   writeState(s);
+  emitStoreChanged();
   return { ok: true, recordId: id };
+}
+
+export function getRecordById(recordId) {
+  const id = Number(recordId);
+  if (!Number.isFinite(id)) return null;
+  return getState().records.find((r) => r.id === id) ?? null;
+}
+
+export function updateRecord({ id, tagId, eventDate, note }) {
+  const s = getState();
+  const rid = Number(id);
+  if (!Number.isFinite(rid)) return { ok: false, error: "记录无效" };
+
+  const idx = s.records.findIndex((r) => r.id === rid);
+  if (idx < 0) return { ok: false, error: "记录不存在" };
+
+  const tId = tagId == null || tagId === "" ? null : Number(tagId);
+  if (tId != null && !Number.isFinite(tId)) return { ok: false, error: "标签无效" };
+
+  const iso = String(eventDate || "").trim();
+  if (!iso) return { ok: false, error: "请选择日期" };
+
+  const ts = nowISO();
+  s.records[idx] = {
+    ...s.records[idx],
+    tagId: tId,
+    eventDate: iso,
+    note: String(note || ""),
+    updatedAt: ts,
+  };
+  writeState(s);
+  emitStoreChanged();
+  return { ok: true };
+}
+
+export function deleteRecord(recordId) {
+  const s = getState();
+  const rid = Number(recordId);
+  if (!Number.isFinite(rid)) return { ok: false, error: "记录无效" };
+  const before = s.records.length;
+  s.records = s.records.filter((r) => r.id !== rid);
+  if (s.records.length === before) return { ok: false, error: "记录不存在" };
+  writeState(s);
+  emitStoreChanged();
+  return { ok: true };
 }
 
 export function computeTagStats() {

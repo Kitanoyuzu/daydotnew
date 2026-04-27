@@ -1,4 +1,4 @@
-import { createRecord } from "../store.js";
+import { createRecord, deleteRecord, getRecordById, getTagById, updateRecord } from "../store.js";
 
 function ensurePortal() {
   const portal = document.getElementById("portal");
@@ -79,6 +79,30 @@ export function initModalAll() {
     return nodes.length ? nodes[nodes.length - 1] : null;
   };
 
+  const getPortal = () => document.getElementById("portal");
+
+  const syncEditModalFromRecord = (recordId) => {
+    const r = getRecordById(recordId);
+    if (!r) return;
+
+    const dateInput = latest('[data-dd-cal-input="modal-edit-date"]');
+    const tagRoot = latest('[data-dd-combo-root="modal-edit-tag"]');
+    const tagInput = latest('[data-dd-combo-input="modal-edit-tag"]');
+    const noteInput = latest('[data-dd-input="modal-edit-note"]');
+
+    if (dateInput) dateInput.value = r.eventDate || "";
+    if (noteInput) noteInput.value = r.note || "";
+
+    if (tagRoot) {
+      if (r.tagId != null) tagRoot.dataset.ddValue = String(r.tagId);
+      else delete tagRoot.dataset.ddValue;
+    }
+    if (tagInput) {
+      const t = r.tagId != null ? getTagById(r.tagId) : null;
+      tagInput.value = t?.name || "";
+    }
+  };
+
   document.addEventListener("click", (e) => {
     const action = e.target.closest?.("[data-dd-action]");
     if (action) {
@@ -99,6 +123,38 @@ export function initModalAll() {
         if (!r.ok) return toast(r.error || "保存失败");
 
         toast("已保存");
+        closeModal();
+        return;
+      }
+
+      if (type === "edit-record-save") {
+        e.preventDefault();
+        const portal = getPortal();
+        const recordId = Number(portal?.dataset?.ddEditingRecordId || "");
+        if (!Number.isFinite(recordId)) return toast("记录无效");
+
+        const tagRoot = latest('[data-dd-combo-root="modal-edit-tag"]');
+        const dateInput = latest('[data-dd-cal-input="modal-edit-date"]');
+        const noteInput = latest('[data-dd-input="modal-edit-note"]');
+
+        const tagIdRaw = String(tagRoot?.dataset?.ddValue || "").trim();
+        const tagId = tagIdRaw ? Number(tagIdRaw) : null;
+        const eventDate = String(dateInput?.value || "").trim();
+        const note = String(noteInput?.value || "");
+
+        const r = updateRecord({ id: recordId, tagId: Number.isFinite(tagId) ? tagId : null, eventDate, note });
+        if (!r.ok) return toast(r.error || "保存失败");
+        toast("已保存");
+        closeModal();
+        return;
+      }
+
+      if (type === "record-delete-confirm") {
+        e.preventDefault();
+        const recordId = Number(action.getAttribute("data-dd-record-id") || "");
+        const r = deleteRecord(recordId);
+        if (!r.ok) return toast(r.error || "删除失败");
+        toast("已删除");
         closeModal();
         return;
       }
@@ -139,8 +195,44 @@ export function initModalAll() {
         toast("原型未接入：弹窗模板缺失");
         return;
       }
+
+      // 编辑记录：记住 recordId，并在打开后把当前值同步进弹窗
+      if (target === "edit-record") {
+        const recordId = Number(openBtn.closest?.("[data-record-id]")?.getAttribute?.("data-record-id") || "");
+        const portal = getPortal();
+        if (portal) portal.dataset.ddEditingRecordId = Number.isFinite(recordId) ? String(recordId) : "";
+      }
+
       openModal(template.innerHTML, { ariaLabel: openBtn.getAttribute("aria-label") || "弹窗" });
       lucide?.createIcons?.();
+
+      if (target === "new-record") {
+        // 从不同入口打开：尽量预填 tag / date（不改变 UI，仅写默认值）
+        const tagRoot = latest('[data-dd-combo-root="modal-new-tag"]');
+        const tagInput = latest('[data-dd-combo-input="modal-new-tag"]');
+        const dateInput = latest('[data-dd-cal-input="modal-new-date"]');
+
+        const raw = String(openBtn.getAttribute("data-dd-new-tag-id") || openBtn.dataset.ddNewTagId || "").trim();
+        const tagId = raw ? Number(raw) : null;
+
+        if (tagRoot) {
+          if (tagId != null && Number.isFinite(tagId)) tagRoot.dataset.ddValue = String(tagId);
+          else delete tagRoot.dataset.ddValue;
+        }
+        if (tagInput) {
+          const t = tagId != null && Number.isFinite(tagId) ? getTagById(tagId) : null;
+          tagInput.value = t?.name || "";
+        }
+
+        const iso = String(openBtn.dataset.ddNewDateIso || "").trim();
+        if (dateInput && iso) dateInput.value = iso;
+      }
+
+      if (target === "edit-record") {
+        const portal = getPortal();
+        const recordId = Number(portal?.dataset?.ddEditingRecordId || "");
+        if (Number.isFinite(recordId)) syncEditModalFromRecord(recordId);
+      }
       return;
     }
 
