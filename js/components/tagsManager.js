@@ -24,7 +24,6 @@ export function renderTagsManager() {
         name: t.name,
         parent: p?.name || "",
         count: counts.get(t.id) || 0,
-        parentCount: counts.get(p?.id) || 0,
         tint,
       });
     })
@@ -78,7 +77,7 @@ export function renderTagsManager() {
   `;
 }
 
-function tagRow({ id, parentId, name, parent, count, parentCount, tint }) {
+function tagRow({ id, parentId, name, parent, count, tint }) {
   const bg = `color-mix(in srgb, ${tint} 18%, var(--card))`;
   const pText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
   return `
@@ -96,7 +95,7 @@ function tagRow({ id, parentId, name, parent, count, parentCount, tint }) {
       <div class="text-[14px]" style="color: var(--text); font-weight: 600;">${name}</div>
       <div class="flex items-center gap-3">
         <span class="dd-pill" style="height: 28px; font-size: 14px; background: color-mix(in srgb, ${tint} 22%, var(--card)); color:${pText};">${parent}</span>
-        <span class="text-[12px]" style="color: var(--text-sub);" title="子级/父级">${count}${parentCount != null ? `/${parentCount}` : ""}</span>
+        <span class="text-[12px]" style="color: var(--text-sub);">${count}</span>
       </div>
     </button>
   `;
@@ -135,7 +134,6 @@ export function initTagsManagerAll() {
           name: t.name,
           parent: p?.name || "",
           count: counts.get(t.id) || 0,
-          parentCount: counts.get(p?.id) || 0,
           tint,
         });
       })
