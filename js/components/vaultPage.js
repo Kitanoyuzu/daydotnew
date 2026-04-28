@@ -26,11 +26,16 @@ export function initVaultPageAll() {
   };
 
   const rerenderWall = () => {
+    const root = latest('[data-dd-combo-root="vault-search"]');
     const input = latest('[data-dd-combo-input="vault-search"]');
     const wall = latest("[data-dd-vault-wall]");
     if (!wall || !input) return;
 
-    const ids = computeFiltered(input.value);
+    // 选中下拉项时，ComboSearch 会写 root.dataset.ddValue；手输时我们会清掉它
+    const pickedRaw = String(root?.dataset?.ddValue || "").trim();
+    const pickedId = pickedRaw ? Number(pickedRaw) : NaN;
+
+    const ids = Number.isFinite(pickedId) ? new Set([pickedId]) : computeFiltered(input.value);
     if (!ids) {
       wall.innerHTML = renderRecordWall();
       lucide?.createIcons?.();
@@ -49,7 +54,29 @@ export function initVaultPageAll() {
   };
 
   document.addEventListener("input", (e) => {
-    if (e.target?.closest?.('[data-dd-combo-input="vault-search"]')) rerenderWall();
+    if (e.target?.closest?.('[data-dd-combo-input="vault-search"]')) {
+      // 手动输入：清掉“已选择项”，回到模糊搜索
+      const root = latest('[data-dd-combo-root="vault-search"]');
+      if (root) delete root.dataset.ddValue;
+      rerenderWall();
+    }
+  });
+
+  // 选择下拉项不会触发 input，需要单独监听
+  document.addEventListener("dd:comboSelect", (e) => {
+    const root = e.target?.closest?.('[data-dd-combo-root="vault-search"]');
+    if (!root) return;
+    rerenderWall();
+  });
+
+  // 兜底：有些端（尤其被 SW 缓存/旧实现）可能事件没触发，直接监听选项点击
+  document.addEventListener("click", (e) => {
+    const opt = e.target?.closest?.("[data-dd-combo-option]");
+    if (!opt) return;
+    const root = opt.closest?.('[data-dd-combo-root="vault-search"]');
+    if (!root) return;
+    // ComboSearch 内部会先写入 ddValue，这里下一拍重绘确保拿到最新值
+    setTimeout(rerenderWall, 0);
   });
 }
 

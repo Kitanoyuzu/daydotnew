@@ -1,4 +1,4 @@
-const VERSION = "daydot-v2";
+const VERSION = "daydot-v2-20260428-2";
 const CACHE_NAME = `${VERSION}-cache`;
 
 const CORE_ASSETS = [
@@ -65,16 +65,55 @@ self.addEventListener("fetch", (event) => {
   // 只缓存同源 GET
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
 
+  // 关键：sw.js 永远走网络，不参与 SW 自己的缓存
+  if (url.pathname.endsWith("/sw.js") || url.pathname.endsWith("sw.js")) {
+    event.respondWith(fetch(req, { cache: "no-store" }));
+    return;
+  }
+
+  // 页面导航：网络优先，失败再回退缓存的 index.html（保证上线后更新更容易生效）
+  if (req.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(req);
+          if (fresh && fresh.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put("./index.html", fresh.clone());
+          }
+          return fresh;
+        } catch {
+          const cache = await caches.open(CACHE_NAME);
+          const fallback = await cache.match("./index.html");
+          return fallback || new Response("offline", { status: 503, headers: { "Content-Type": "text/plain" } });
+        }
+      })(),
+    );
+    return;
+  }
+
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       const cached = await cache.match(req);
-      if (cached) return cached;
 
       try {
-        const fresh = await fetch(req);
-        if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
-        return fresh;
+        // 静态资源：stale-while-revalidate
+        const freshPromise = fetch(req)
+          .then((fresh) => {
+            if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
+            return fresh;
+          })
+          .catch(() => null);
+
+        if (cached) {
+          // 后台更新，不阻塞响应
+          event.waitUntil(freshPromise);
+          return cached;
+        }
+        const fresh = await freshPromise;
+        if (fresh) return fresh;
+        throw new Error("offline");
       } catch (e) {
         // 离线兜底：回退 index.html（单页应用）
         const fallback = await cache.match("./index.html");

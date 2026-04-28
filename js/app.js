@@ -13,7 +13,10 @@ import { ensureStore } from "./store.js";
 async function registerPWA() {
   if (!("serviceWorker" in navigator)) return;
   try {
-    const reg = await navigator.serviceWorker.register("./sw.js");
+    // 关键：避免浏览器用 HTTP cache 缓存 sw.js，导致更新检测不触发
+    const reg = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+    // 主动检查更新（尤其是 GitHub Pages 这种静态托管）
+    reg.update?.();
     if (reg.waiting) {
       const ok = window.confirm("发现新版本，是否立即刷新？");
       if (ok) reg.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -29,6 +32,9 @@ async function registerPWA() {
       });
     });
     navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
+
+    // 兜底：在后台周期性检查一次更新（不打扰用户）
+    setInterval(() => reg.update?.(), 60 * 1000);
   } catch {}
 }
 

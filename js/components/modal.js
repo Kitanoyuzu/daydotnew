@@ -219,20 +219,12 @@ export function initModalAll() {
         const tagHidden = latest("[data-dd-vaultall-tagfilter]");
         if (tagHidden) tagHidden.value = "";
 
-        // 同步弹窗内 combobox（如果存在）
-        const tagRoot = latest('[data-dd-combo-root="vaultall-tag-any"]');
-        const tagInput = latest('[data-dd-combo-input="vaultall-tag-any"]');
-        if (tagRoot) delete tagRoot.dataset.ddValue;
-        if (tagInput) tagInput.value = "";
+        // 同步抽屉内搜索框（如果存在）
+        const treeQ = latest("[data-dd-tag-tree-q]");
+        if (treeQ) treeQ.value = "";
 
         document.dispatchEvent(new CustomEvent("dd:vaultallFilterChanged"));
         toast("已清除");
-        return;
-      }
-
-      if (type === "vaultall-filter-close") {
-        e.preventDefault();
-        closeModal();
         return;
       }
     }
