@@ -1,4 +1,4 @@
-const VERSION = "daydot-v2-20260428-164024";
+const VERSION = "daydot-v2-20260428-194205";
 const CACHE_NAME = `${VERSION}-cache`;
 
 const CORE_ASSETS = [

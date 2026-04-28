@@ -13,10 +13,12 @@ python -m http.server 5173 --bind 0.0.0.0
 ```
 
 打开：
+
 - 电脑：`http://localhost:5173/`
 - 手机（同一局域网）：`http://<你的电脑IP>:5173/`
 
 说明：
+
 - 开发态（localhost/局域网 IP）会**禁用 Service Worker**，避免缓存导致“改了看不到”。
 
 ---
@@ -39,6 +41,7 @@ python -m http.server 5173 --bind 0.0.0.0
   - 导入内容写入 `localStorage`
 
 兼容性策略（当前取舍）：
+
 - **只保证“records 不丢”**；未来版本即使标签结构调整，旧记录也会保留，最多表现为“未分类/标签为空”。
 
 ---
@@ -49,7 +52,7 @@ python -m http.server 5173 --bind 0.0.0.0
 
 ### 发版步骤（你每次更新都照做）
 
-1) **发版前自动 bump `sw.js` 版本号**
+1. **发版前自动 bump `sw.js` 版本号**
 
 ```bash
 node ./scripts/bump-sw-version.mjs
@@ -57,7 +60,7 @@ node ./scripts/bump-sw-version.mjs
 
 它会自动修改 `sw.js` 顶部的 `VERSION`，从而让手机端识别为“新版本”，刷新后拉取最新缓存。
 
-2) 推送代码并发布到 GitHub Pages（按你的现有方式）
+1. 推送代码并发布到 GitHub Pages（按你的现有方式）
 
 ### 手机端更新方式（使用者视角）
 

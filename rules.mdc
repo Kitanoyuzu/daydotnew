@@ -28,4 +28,5 @@ description: DayDot 项目级规则（代码与实现约束）
 
 - **每次发版前必须更新 `sw.js` 的 `VERSION`**，否则手机端可能继续使用旧的离线缓存，导致“改了看不到”。
 - 已提供脚本：在项目根目录执行 `node ./scripts/bump-sw-version.mjs`（会自动把 `sw.js` 的 `VERSION` 更新为当前时间戳）。
+- 当你明确表示“准备推送到 GitHub / 发布到 GitHub Pages”，并且**已确认开始发布**后：Agent 需要**主动执行**上述脚本（不需要你手动跑），再提醒你进行提交/推送。
 - 开发态（localhost/局域网）默认禁用 Service Worker，避免本地调试被缓存影响；线上（GitHub Pages）启用 SW 并通过版本号控制更新。
