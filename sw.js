@@ -1,4 +1,4 @@
-const VERSION = "daydot-v2-20260428-194956";
+const VERSION = "daydot-v2-20260428-195702";
 const CACHE_NAME = `${VERSION}-cache`;
 
 const CORE_ASSETS = [
@@ -71,22 +71,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 页面导航：网络优先，失败再回退缓存的 index.html（保证上线后更新更容易生效）
+  // 页面导航：缓存优先 + 后台更新（PWA 启动更快）
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
-        try {
-          const fresh = await fetch(req, { cache: "no-store" });
-          if (fresh && fresh.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put("./index.html", fresh.clone());
-          }
-          return fresh;
-        } catch {
-          const cache = await caches.open(CACHE_NAME);
-          const fallback = await cache.match("./index.html");
-          return fallback || new Response("offline", { status: 503, headers: { "Content-Type": "text/plain" } });
+        const cache = await caches.open(CACHE_NAME);
+        const cachedIndex = await cache.match("./index.html");
+
+        const update = fetch(req, { cache: "no-store" })
+          .then((fresh) => {
+            if (fresh && fresh.status === 200) cache.put("./index.html", fresh.clone());
+            return fresh;
+          })
+          .catch(() => null);
+
+        if (cachedIndex) {
+          event.waitUntil(update);
+          return cachedIndex;
         }
+
+        const fresh = await update;
+        if (fresh) return fresh;
+        return new Response("offline", { status: 503, headers: { "Content-Type": "text/plain" } });
       })(),
     );
     return;
