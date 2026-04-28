@@ -136,7 +136,17 @@ export function getState() {
 
 export function setState(next) {
   ensureStore();
-  writeState(cleanupHierarchy(next));
+  // 稳定性策略：导入/外部 setState 若缺 records，不允许把现有 records 覆盖成空
+  // （你只关心“记录不丢”，其它字段/结构允许变化或丢失）
+  const current = readState();
+  const safeNext =
+    next && typeof next === "object"
+      ? {
+          ...next,
+          records: Array.isArray(next.records) ? next.records : current.records,
+        }
+      : current;
+  writeState(cleanupHierarchy(safeNext));
   emitStoreChanged();
 }
 

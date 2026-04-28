@@ -4,11 +4,17 @@ function ensurePortal() {
   const portal = document.getElementById("portal");
   if (!portal) return null;
   portal.className = "dd-portal";
-  if (!portal.querySelector("[data-dd-overlay]")) {
-    portal.innerHTML = `
-      <div class="dd-overlay" data-dd-overlay></div>
-      <div data-dd-modal-slot></div>
-    `;
+  // 不复用 modal 的 slot，否则会覆盖弹窗内容。
+  if (!portal.querySelector("[data-dd-cal-overlay]")) {
+    const overlay = document.createElement("div");
+    overlay.className = "dd-overlay";
+    overlay.setAttribute("data-dd-cal-overlay", "1");
+
+    const slot = document.createElement("div");
+    slot.setAttribute("data-dd-cal-slot", "1");
+
+    portal.appendChild(overlay);
+    portal.appendChild(slot);
   }
   return portal;
 }
@@ -16,8 +22,8 @@ function ensurePortal() {
 function openCalendar({ anchorEl, initialISO, dots, onChange }) {
   const portal = ensurePortal();
   if (!portal) return;
-  const overlay = portal.querySelector("[data-dd-overlay]");
-  const slot = portal.querySelector("[data-dd-modal-slot]");
+  const overlay = portal.querySelector("[data-dd-cal-overlay]");
+  const slot = portal.querySelector("[data-dd-cal-slot]");
   if (!overlay || !slot) return;
 
   const init = initialISO ? new Date(initialISO + "T00:00:00") : new Date();
@@ -141,6 +147,7 @@ export function initCalendarPopoverAll() {
     const onChange = (v) => {
       // 同步 UI 文案（如日期筛选 pill）
       if (display) display.textContent = v || "日期";
+      document.dispatchEvent(new CustomEvent("dd:calChanged", { detail: { id, value: v || "" } }));
     };
 
     openCalendar({ anchorEl: input, initialISO: input.value, dots: [], onChange });

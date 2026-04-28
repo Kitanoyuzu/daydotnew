@@ -101,11 +101,9 @@ export function initVaultAllAll() {
 
   document.addEventListener("dd:vaultallFilterChanged", rerender);
 
-  document.addEventListener("click", (e) => {
-    // Calendar popover will set input.value; we rerender after it closes by listening to next tick
-    const calTrigger = e.target.closest?.('[data-dd-cal-trigger="vaultall-datefilter"]');
-    if (!calTrigger) return;
-    setTimeout(rerender, 0);
+  document.addEventListener("dd:calChanged", (e) => {
+    if (e.detail?.id !== "vaultall-datefilter") return;
+    rerender();
   });
 }
 

@@ -69,7 +69,8 @@ export function initBackupPanelAll() {
 
     try {
       const text = await file.text();
-      const next = JSON.parse(text);
+      const parsed = JSON.parse(text);
+      const next = parsed && typeof parsed === "object" && parsed.state && typeof parsed.state === "object" ? parsed.state : parsed;
       setState(next);
       toast("已导入");
     } catch {
