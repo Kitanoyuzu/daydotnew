@@ -1,4 +1,4 @@
-const VERSION = "daydot-v2-20260428-2";
+const VERSION = "daydot-v2-20260428-164024";
 const CACHE_NAME = `${VERSION}-cache`;
 
 const CORE_ASSETS = [
@@ -76,7 +76,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(req);
+          const fresh = await fetch(req, { cache: "no-store" });
           if (fresh && fresh.status === 200) {
             const cache = await caches.open(CACHE_NAME);
             cache.put("./index.html", fresh.clone());
@@ -99,7 +99,7 @@ self.addEventListener("fetch", (event) => {
 
       try {
         // 静态资源：stale-while-revalidate
-        const freshPromise = fetch(req)
+        const freshPromise = fetch(req, { cache: "no-store" })
           .then((fresh) => {
             if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
             return fresh;

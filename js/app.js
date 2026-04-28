@@ -12,6 +12,15 @@ import { ensureStore } from "./store.js";
 
 async function registerPWA() {
   if (!("serviceWorker" in navigator)) return;
+  // 开发态（localhost/局域网）禁用 SW，避免缓存导致“改了看不到”
+  const host = String(location.hostname || "");
+  const isPrivateIp =
+    /^localhost$/i.test(host) ||
+    /^127(?:\.\d{1,3}){3}$/.test(host) ||
+    /^10(?:\.\d{1,3}){3}$/.test(host) ||
+    /^192\.168(?:\.\d{1,3}){2}$/.test(host) ||
+    /^172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}$/.test(host);
+  if (isPrivateIp) return;
   try {
     // 关键：避免浏览器用 HTTP cache 缓存 sw.js，导致更新检测不触发
     const reg = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });

@@ -62,11 +62,14 @@ export function renderTagsManager() {
       <div class="dd-card" style="padding: 14px;">
         <div class="dd-card px-[14px]" style="height: var(--control-h); border-radius: var(--r-pill); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); background: color-mix(in srgb, var(--bg) 66%, var(--card)); display:flex; align-items:center; gap:10px;">
           <i data-lucide="search" class="w-[18px] h-[18px]" style="color: var(--text-sub)"></i>
-          <input class="w-full h-full bg-transparent outline-none" placeholder="搜索标签…" data-dd-tags-search />
+          <input class="flex-1 h-full bg-transparent outline-none" placeholder="搜索标签…" data-dd-tags-search />
+          <button class="dd-icon-btn" type="button" aria-label="标签树" data-dd-modal-open="vaultall-filter">
+            <i data-lucide="sliders-horizontal" class="w-[18px] h-[18px]"></i>
+          </button>
         </div>
 
         <div class="pt-4 flex flex-col gap-3">
-          <div data-dd-tags-list>
+          <div data-dd-tags-list class="flex flex-col" style="gap: calc(var(--control-h) / 4);">
             ${rows}
           </div>
         </div>

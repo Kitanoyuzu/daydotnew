@@ -24,3 +24,8 @@ description: DayDot 项目级规则（代码与实现约束）
 - 数据默认只存浏览器本地（localStorage/IndexedDB 由实现阶段决定），无网络请求。
 - 导入导出：导入前自动备份当前数据，防覆盖。
 
+## 发版与缓存（GitHub Pages / 手机端更新）
+
+- **每次发版前必须更新 `sw.js` 的 `VERSION`**，否则手机端可能继续使用旧的离线缓存，导致“改了看不到”。
+- 已提供脚本：在项目根目录执行 `node ./scripts/bump-sw-version.mjs`（会自动把 `sw.js` 的 `VERSION` 更新为当前时间戳）。
+- 开发态（localhost/局域网）默认禁用 Service Worker，避免本地调试被缓存影响；线上（GitHub Pages）启用 SW 并通过版本号控制更新。
