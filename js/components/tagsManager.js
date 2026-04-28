@@ -1,6 +1,7 @@
 import { renderComboSearch } from "./comboSearch.js";
+import { initBackupPanelAll, renderBackupPanel } from "./backupPanel.js";
 import { toast } from "./modal.js";
-import { computeTagStats, getParentTag, listTags, upsertTag } from "../store.js";
+import { computeTagStats, deleteTag, getParentTag, listTags, upsertTag } from "../store.js";
 
 export function renderTagsManager() {
   const tags = listTags();
@@ -23,6 +24,7 @@ export function renderTagsManager() {
         name: t.name,
         parent: p?.name || "",
         count: counts.get(t.id) || 0,
+        parentCount: counts.get(p?.id) || 0,
         tint,
       });
     })
@@ -48,6 +50,9 @@ export function renderTagsManager() {
             <button class="dd-icon-btn" type="button" aria-label="保存标签" data-dd-tags-save>
               <i data-lucide="check" class="w-[18px] h-[18px]"></i>
             </button>
+            <button class="dd-icon-btn" type="button" aria-label="删除标签" data-dd-tags-delete>
+              <i data-lucide="trash-2" class="w-[18px] h-[18px]"></i>
+            </button>
           </div>
           <div class="hidden" data-dd-tags-color-panel style="padding: 10px 6px 0;">
             ${renderColorPalette()}
@@ -67,11 +72,13 @@ export function renderTagsManager() {
           </div>
         </div>
       </div>
+
+      ${renderBackupPanel()}
     </section>
   `;
 }
 
-function tagRow({ id, parentId, name, parent, count, tint }) {
+function tagRow({ id, parentId, name, parent, count, parentCount, tint }) {
   const bg = `color-mix(in srgb, ${tint} 18%, var(--card))`;
   const pText = `color-mix(in srgb, ${tint} 68%, var(--text))`;
   return `
@@ -89,7 +96,7 @@ function tagRow({ id, parentId, name, parent, count, tint }) {
       <div class="text-[14px]" style="color: var(--text); font-weight: 600;">${name}</div>
       <div class="flex items-center gap-3">
         <span class="dd-pill" style="height: 28px; font-size: 14px; background: color-mix(in srgb, ${tint} 22%, var(--card)); color:${pText};">${parent}</span>
-        <span class="text-[12px]" style="color: var(--text-sub);">${count}</span>
+        <span class="text-[12px]" style="color: var(--text-sub);" title="子级/父级">${count}${parentCount != null ? `/${parentCount}` : ""}</span>
       </div>
     </button>
   `;
@@ -98,6 +105,7 @@ function tagRow({ id, parentId, name, parent, count, tint }) {
 export function initTagsManagerAll() {
   if (document.documentElement.dataset.ddTagsManagerDelegated === "1") return;
   document.documentElement.dataset.ddTagsManagerDelegated = "1";
+  initBackupPanelAll();
 
   const refreshList = () => {
     const wrap = document.querySelector("[data-dd-tags-list]");
@@ -127,6 +135,7 @@ export function initTagsManagerAll() {
           name: t.name,
           parent: p?.name || "",
           count: counts.get(t.id) || 0,
+          parentCount: counts.get(p?.id) || 0,
           tint,
         });
       })
@@ -221,6 +230,29 @@ export function initTagsManagerAll() {
       if (childInput) childInput.value = rr.tag.name;
       toast("标签已保存");
       refreshList();
+    }
+
+    const del = e.target.closest?.("[data-dd-tags-delete]");
+    if (del) {
+      const childRoot = document.querySelector('[data-dd-combo-root="tags-child"]');
+      const childValue = String(childRoot?.dataset?.ddValue || "").trim();
+      const tagId = childValue && !childValue.startsWith("create:") ? Number(childValue) : NaN;
+      if (!Number.isFinite(tagId)) return toast("请选择要删除的子级");
+
+      const deleteRecords = window.confirm(
+        "是否连同该标签下的记录一起删除？\n\n- 确定：删除标签 + 删除记录\n- 取消：仅删除标签（记录保留，标签置空）",
+      );
+      const r = deleteTag({ tagId, deleteRecords });
+      if (!r.ok) return toast(r.error || "删除失败");
+
+      // 清空选择
+      const childInput = document.querySelector('[data-dd-combo-input="tags-child"]');
+      if (childInput) childInput.value = "";
+      if (childRoot) delete childRoot.dataset.ddValue;
+
+      toast(deleteRecords ? "标签与记录已删除" : "标签已删除");
+      refreshList();
+      return;
     }
   });
 }

@@ -43,7 +43,7 @@ export function renderNewForm() {
         ${renderComboSearch({
           id: "new-tag",
           placeholder: "添加标签…",
-          rightIcon: "settings",
+          rightIcon: "plus",
           rightHref: "#/tags",
           mode: "tag",
         })}

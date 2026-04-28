@@ -18,7 +18,7 @@ function cnWeekday(w) {
   return ["一", "二", "三", "四", "五", "六", "日"][w];
 }
 
-export function buildMonthGrid({ year, monthIndex, selectedISO, dots = [] }) {
+export function buildMonthGrid({ year, monthIndex, selectedISO, dots = [], dotColor = "" }) {
   const first = startOfMonth(year, monthIndex);
   const firstDay = (first.getDay() + 6) % 7; // Mon=0
   const total = daysInMonth(year, monthIndex);
@@ -46,8 +46,11 @@ export function buildMonthGrid({ year, monthIndex, selectedISO, dots = [] }) {
           const bg = isSelected
             ? `background: var(--calendar-selected-bg); color: var(--card);`
             : `background: transparent; color: var(--text);`;
+          const dotBg = dotColor
+            ? `background: ${dotColor};`
+            : `background: color-mix(in srgb, var(--accent) 72%, var(--text));`;
           const dot = c.hasDot
-            ? `<span style="width: var(--calendar-dot-size); height: var(--calendar-dot-size); border-radius: 999px; background: color-mix(in srgb, var(--accent) 72%, var(--text)); display:block; margin-top: 4px; opacity: ${isSelected ? 0.85 : 0.55};"></span>`
+            ? `<span style="width: var(--calendar-dot-size); height: var(--calendar-dot-size); border-radius: 999px; ${dotBg} display:block; margin-top: 4px; opacity: ${isSelected ? 0.85 : 0.55};"></span>`
             : `<span style="width: var(--calendar-dot-size); height: var(--calendar-dot-size); display:block; margin-top: 4px; opacity: 0;"></span>`;
           return `
             <button
@@ -72,6 +75,7 @@ export function renderCalendarMonthCard({
   monthIndex,
   selectedISO,
   dots = [],
+  dotColor = "",
   showFooter = true,
 }) {
   return `
@@ -82,7 +86,7 @@ export function renderCalendarMonthCard({
         <button type="button" class="dd-icon-btn" data-dd-cal-next="${id}"><i data-lucide="chevron-right" class="w-[18px] h-[18px]"></i></button>
       </div>
 
-      ${buildMonthGrid({ year, monthIndex, selectedISO, dots })}
+      ${buildMonthGrid({ year, monthIndex, selectedISO, dots, dotColor })}
 
       ${
         showFooter

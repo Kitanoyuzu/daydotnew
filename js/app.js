@@ -10,6 +10,28 @@ import { initPresetTagsAll } from "./components/presetTags.js";
 import { initTagsManagerAll } from "./components/tagsManager.js";
 import { ensureStore } from "./store.js";
 
+async function registerPWA() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.register("./sw.js");
+    if (reg.waiting) {
+      const ok = window.confirm("发现新版本，是否立即刷新？");
+      if (ok) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+    reg.addEventListener("updatefound", () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener("statechange", () => {
+        if (sw.state === "installed" && navigator.serviceWorker.controller) {
+          const ok = window.confirm("新版本已就绪，是否刷新生效？");
+          if (ok) reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+        }
+      });
+    });
+    navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
+  } catch {}
+}
+
 function mount() {
   ensureStore();
   const app = document.getElementById("app");
@@ -41,6 +63,7 @@ window.addEventListener("hashchange", mount);
 window.addEventListener("DOMContentLoaded", () => {
   if (!location.hash) location.hash = "#/vault";
   mount();
+  registerPWA();
 });
 
 let storeRerenderScheduled = false;

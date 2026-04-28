@@ -1,0 +1,12 @@
+{
+  "name": "DayDot",
+  "short_name": "DayDot",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAF6F1",
+  "theme_color": "#FAF6F1",
+  "description": "记录生活中不规律事件的日期，离线可用。",
+  "icons": []
+}
+

@@ -154,10 +154,6 @@ function buildOptions({ q, mode }) {
 
     return `
       <div class="flex flex-col gap-1">
-        <button type="button" class="dd-combo-item" data-dd-combo-option="all" data-dd-combo-value="" data-dd-combo-label="全部">
-          <span class="text-[14px]" style="color: var(--text);">全部</span>
-          <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);"> </span>
-        </button>
         ${parentItems}
         ${leafItems}
       </div>
@@ -172,10 +168,6 @@ function buildOptions({ q, mode }) {
 
     return `
       <div class="flex flex-col gap-1">
-        <button type="button" class="dd-combo-item" data-dd-combo-option="all" data-dd-combo-value="" data-dd-combo-label="全部">
-          <span class="text-[14px]" style="color: var(--text);">全部</span>
-          <span class="dd-pill" style="background: var(--secondary); color: var(--text-sub);"> </span>
-        </button>
         ${buildLeafTagItems(items)}
       </div>
     `;

@@ -289,6 +289,24 @@ export function deleteRecord(recordId) {
   return { ok: true };
 }
 
+export function deleteTag({ tagId, deleteRecords = false } = {}) {
+  const s = getState();
+  const tid = Number(tagId);
+  if (!Number.isFinite(tid)) return { ok: false, error: "标签无效" };
+
+  const tag = s.tags.find((t) => t.id === tid);
+  if (!tag) return { ok: false, error: "标签不存在" };
+  if (tag.parentId == null) return { ok: false, error: "请删除子级标签" };
+
+  if (deleteRecords) s.records = s.records.filter((r) => String(r.tagId) !== String(tid));
+  else s.records = s.records.map((r) => (String(r.tagId) === String(tid) ? { ...r, tagId: null } : r));
+
+  s.tags = s.tags.filter((t) => t.id !== tid);
+  writeState(cleanupHierarchy(s));
+  emitStoreChanged();
+  return { ok: true };
+}
+
 export function computeTagStats() {
   const s = getState();
   const counts = new Map();

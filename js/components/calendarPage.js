@@ -23,7 +23,7 @@ export function renderCalendarPage() {
       <div data-dd-cal-metric class="hidden"></div>
 
       <div data-dd-cal-inline-root="${id}" data-dd-cal-selected="${todayISO}" data-dd-cal-year="${year}" data-dd-cal-month="${monthIndex}" data-dd-cal-tag="">
-        ${renderCalendarMonthCard({ id, year, monthIndex, selectedISO: todayISO, dots, showFooter: false })}
+        ${renderCalendarMonthCard({ id, year, monthIndex, selectedISO: todayISO, dots, dotColor: "", showFooter: false })}
 
         <div class="flex items-center justify-between pt-4">
           <div class="text-[13px]" style="color: var(--text-sub);" data-dd-cal-date-label>${todayISO}</div>
@@ -136,9 +136,13 @@ export function initCalendarPageAll() {
     const rerenderCalendar = () => {
       const { year, monthIndex, selectedISO } = getYM();
       const dots = Array.from(new Set(listRecords().map((r) => r.eventDate).filter(Boolean)));
+      const tagId = wrap.getAttribute("data-dd-cal-tag") || "";
+      const tag = tagId ? getTagById(tagId) : null;
+      const parent = getParentTag(tag);
+      const dotColor = tagId ? (parent?.color || "#C4A882") : "";
       const card = wrap.querySelector(`[data-dd-cal-card="${id}"]`);
       if (!card) return;
-      card.outerHTML = renderCalendarMonthCard({ id, year, monthIndex, selectedISO, dots, showFooter: false });
+      card.outerHTML = renderCalendarMonthCard({ id, year, monthIndex, selectedISO, dots, dotColor, showFooter: false });
       lucide?.createIcons?.();
       bindCalendarButtons();
     };
@@ -182,6 +186,8 @@ export function initCalendarPageAll() {
       const { value } = e.detail || {};
       wrap.setAttribute("data-dd-cal-tag", value || "");
       renderMetric(value || "");
+      // 选 Tag 后立刻重画月历，保证圆点颜色即时更新
+      rerenderCalendar();
       rerenderTimeline();
     });
   });
