@@ -56,6 +56,15 @@ export function renderNewForm() {
       </div>
     </div>
 
+    <button
+      class="w-full dd-card"
+      style="height: 54px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); font-size: 18px; font-weight: 700; box-shadow: var(--shadow-card);"
+      type="button"
+      data-dd-action="page-new-save"
+    >
+      记录
+    </button>
+
     <div class="pt-1">
       <div class="pb-3 text-[13px]" style="color: var(--text-sub); font-weight: 700;">常用标签</div>
       <div class="grid grid-cols-3 gap-3">
@@ -69,15 +78,6 @@ export function renderNewForm() {
           .join("")}
       </div>
     </div>
-
-    <button
-      class="w-full dd-card"
-      style="height: 54px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); font-size: 18px; font-weight: 700; box-shadow: var(--shadow-card);"
-      type="button"
-      data-dd-action="page-new-save"
-    >
-      记录
-    </button>
   `;
 }
 

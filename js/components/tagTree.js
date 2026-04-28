@@ -69,11 +69,6 @@ export function renderTagTree({ selectedValue = "" } = {}) {
 
   return `
     <div class="flex flex-col gap-2">
-      <button type="button" class="dd-tree-item ${selectedValue ? "" : "is-active"}" data-dd-tag-tree-value="">
-        <span class="text-[14px]" style="color: var(--text); font-weight: 800;">全部</span>
-        <span class="text-[12px]" style="color: var(--text-sub);"> </span>
-      </button>
-      <div class="h-px" style="background: color-mix(in srgb, var(--border) 70%, transparent);"></div>
       <div class="flex flex-col gap-2" data-dd-tag-tree-list>
         ${parentRows || `<div class="px-3 py-2 text-[12px]" style="color: var(--text-sub);">还没有标签</div>`}
       </div>
