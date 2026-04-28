@@ -1,5 +1,6 @@
 import { renderComboSearch } from "../components/comboSearch.js";
 import { renderRecordWall } from "../components/recordWall.js";
+import { renderBackupPanel } from "../components/backupPanel.js";
 import { initVaultPageAll } from "../components/vaultPage.js";
 
 export function pageVault() {
@@ -16,6 +17,8 @@ export function pageVault() {
       <div data-dd-vault-wall>
         ${renderRecordWall()}
       </div>
+
+      ${renderBackupPanel()}
     </section>
   `;
 

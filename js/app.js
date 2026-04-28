@@ -7,6 +7,7 @@ import { initModalAll } from "./components/modal.js";
 import { initRecordListAll } from "./components/recordList.js";
 import { initPresetTagsAll } from "./components/presetTags.js";
 import { initTagsManagerAll } from "./components/tagsManager.js";
+import { initBackupPanelAll } from "./components/backupPanel.js";
 import { ensureStore } from "./store.js";
 
 async function registerPWA() {
@@ -70,6 +71,7 @@ function mount() {
   initRecordListAll();
   initPresetTagsAll();
   initTagsManagerAll();
+  initBackupPanelAll();
 }
 
 window.addEventListener("hashchange", mount);

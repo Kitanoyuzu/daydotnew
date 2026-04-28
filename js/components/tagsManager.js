@@ -1,5 +1,4 @@
 import { renderComboSearch } from "./comboSearch.js";
-import { initBackupPanelAll, renderBackupPanel } from "./backupPanel.js";
 import { openModal, toast } from "./modal.js";
 import { computeTagStats, deleteTag, getParentTag, listTags, upsertTag } from "../store.js";
 
@@ -75,7 +74,6 @@ export function renderTagsManager() {
         </div>
       </div>
 
-      ${renderBackupPanel()}
     </section>
   `;
 }
@@ -107,7 +105,6 @@ function tagRow({ id, parentId, name, parent, count, tint }) {
 export function initTagsManagerAll() {
   if (document.documentElement.dataset.ddTagsManagerDelegated === "1") return;
   document.documentElement.dataset.ddTagsManagerDelegated = "1";
-  initBackupPanelAll();
 
   const refreshList = () => {
     const wrap = document.querySelector("[data-dd-tags-list]");

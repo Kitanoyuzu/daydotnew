@@ -27,14 +27,14 @@ daydot-v2/
 │   ├── components/
 │   │   ├── bottomNav.js    # 底部导航
 │   │   ├── daysSince.js    # "已过去 XX 天"卡片
-│   │   ├── confirm.js      # 确认弹窗
 │   │   ├── tagPill.js      # Tag 胶囊
 │   │   ├── recordCard.js   # 记录卡片（统一模组）
 │   │   ├── recordList.js   # 记录列表（统一模组）
 │   │   ├── dropdown.js     # 下拉层（锚定控件 + 外部点击隐藏）
 │   │   └── combobox.js     # 组合下拉（输入 + 选择 + 过滤）
-│   └── backup.js           # 导入导出
-│   ├── pwa.js              # SW 注册（Step5 完善策略）
+│   └── backupPanel.js      # 导入导出（UI + 事件委托）
+├── scripts/
+│   └── bump-sw-version.mjs # 发版前自动 bump sw.js VERSION（避免手机端卡旧缓存）
 ├── sw.js
 └── manifest.json
 
