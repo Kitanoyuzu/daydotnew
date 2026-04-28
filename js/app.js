@@ -5,7 +5,6 @@ import { initComboSearchAll } from "./components/comboSearch.js";
 import { initCalendarPopoverAll } from "./components/calendarPopover.js";
 import { initModalAll } from "./components/modal.js";
 import { initRecordListAll } from "./components/recordList.js";
-import { initClickFallback } from "./components/clickFallback.js";
 import { initPresetTagsAll } from "./components/presetTags.js";
 import { initTagsManagerAll } from "./components/tagsManager.js";
 import { ensureStore } from "./store.js";
@@ -69,7 +68,6 @@ function mount() {
   initCalendarPopoverAll();
   initModalAll();
   initRecordListAll();
-  initClickFallback();
   initPresetTagsAll();
   initTagsManagerAll();
 }

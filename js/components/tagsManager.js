@@ -1,6 +1,6 @@
 import { renderComboSearch } from "./comboSearch.js";
 import { initBackupPanelAll, renderBackupPanel } from "./backupPanel.js";
-import { toast } from "./modal.js";
+import { openModal, toast } from "./modal.js";
 import { computeTagStats, deleteTag, getParentTag, listTags, upsertTag } from "../store.js";
 
 export function renderTagsManager() {
@@ -240,19 +240,18 @@ export function initTagsManagerAll() {
       const tagId = childValue && !childValue.startsWith("create:") ? Number(childValue) : NaN;
       if (!Number.isFinite(tagId)) return toast("请选择要删除的子级");
 
-      const deleteRecords = window.confirm(
-        "是否连同该标签下的记录一起删除？\n\n- 确定：删除标签 + 删除记录\n- 取消：仅删除标签（记录保留，标签置空）",
-      );
-      const r = deleteTag({ tagId, deleteRecords });
-      if (!r.ok) return toast(r.error || "删除失败");
-
-      // 清空选择
-      const childInput = document.querySelector('[data-dd-combo-input="tags-child"]');
-      if (childInput) childInput.value = "";
-      if (childRoot) delete childRoot.dataset.ddValue;
-
-      toast(deleteRecords ? "标签与记录已删除" : "标签已删除");
-      refreshList();
+      const portal = document.getElementById("portal");
+      if (portal) {
+        portal.dataset.ddDeletingTagId = String(tagId);
+        portal.dataset.ddDeletingTagName = String(document.querySelector('[data-dd-combo-input="tags-child"]')?.value || "").trim();
+      }
+      const nodes = Array.from(document.querySelectorAll('[data-dd-template="tags-delete-choice"]'));
+      const template = nodes.length ? nodes[nodes.length - 1] : null;
+      if (!template) return;
+      openModal(template.innerHTML, { ariaLabel: "删除标签", variant: "float" });
+      const nameEl = document.querySelector("[data-dd-tags-delete-name]");
+      if (nameEl && portal?.dataset?.ddDeletingTagName) nameEl.textContent = `（${portal.dataset.ddDeletingTagName}）`;
+      lucide?.createIcons?.();
       return;
     }
   });

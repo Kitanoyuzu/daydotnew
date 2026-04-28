@@ -12,7 +12,10 @@ export function initClickFallback() {
     if (el.closest?.("[data-dd-record-card]")) return;
     if (el.closest?.("[data-dd-combo-root]")) return;
     if (el.closest?.("[data-dd-cal-trigger]")) return;
+    if (el.closest?.("[data-dd-action]")) return;
     if (el.hasAttribute("data-dd-modal-open") || el.hasAttribute("data-dd-modal-close")) return;
+    if (el.closest?.("[data-dd-tag-pick]")) return;
+    if (el.closest?.("[data-dd-backup-export], [data-dd-backup-import]")) return;
 
     // anchor 有有效 href 的跳过（让路由/跳转生效）
     if (el.tagName === "A") {

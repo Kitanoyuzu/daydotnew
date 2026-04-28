@@ -1,4 +1,4 @@
-import { createRecord, deleteRecord, getRecordById, getTagById, updateRecord } from "../store.js";
+import { createRecord, deleteRecord, deleteTag, getRecordById, getTagById, updateRecord } from "../store.js";
 
 function ensurePortal() {
   const portal = document.getElementById("portal");
@@ -227,6 +227,19 @@ export function initModalAll() {
         toast("已清除");
         return;
       }
+
+      if (type === "tags-delete-keep-records" || type === "tags-delete-with-records") {
+        e.preventDefault();
+        const portal = getPortal();
+        const tagId = Number(portal?.dataset?.ddDeletingTagId || "");
+        if (!Number.isFinite(tagId)) return;
+        const deleteRecords = type === "tags-delete-with-records";
+        const r = deleteTag({ tagId, deleteRecords });
+        if (!r.ok) return toast(r.error || "删除失败");
+        toast(deleteRecords ? "标签与记录已删除" : "标签已删除");
+        closeModal();
+        return;
+      }
     }
 
     const openBtn = e.target.closest?.("[data-dd-modal-open]");
@@ -236,7 +249,6 @@ export function initModalAll() {
       const nodes = target ? Array.from(document.querySelectorAll(`[data-dd-template="${target}"]`)) : [];
       const template = nodes.length ? nodes[nodes.length - 1] : null; // 优先使用全局模板（最后注入）
       if (!template) {
-        toast("原型未接入：弹窗模板缺失");
         return;
       }
 

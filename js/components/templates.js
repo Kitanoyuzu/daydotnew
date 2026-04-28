@@ -13,6 +13,10 @@ export function renderGlobalTemplates() {
       ${newRecordTemplate()}
     </div>
 
+    <div class="hidden" data-dd-template="tags-delete-choice">
+      ${tagsDeleteChoiceTemplate()}
+    </div>
+
     <div class="hidden" data-dd-template="vaultall-filter">
       ${vaultAllFilterTemplate()}
     </div>
@@ -112,6 +116,47 @@ function vaultAllFilterTemplate() {
 
     <div class="pt-4">
       <button class="w-full dd-card" style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);" data-dd-action="vaultall-filter-clear">清除筛选</button>
+    </div>
+  `;
+}
+
+function tagsDeleteChoiceTemplate() {
+  return `
+    <div class="flex items-center justify-between pb-3">
+      <div class="text-[16px]" style="font-weight: 900; color: var(--text);">删除标签</div>
+      <button class="dd-icon-btn" type="button" aria-label="关闭" data-dd-modal-close><i data-lucide="x" class="w-[18px] h-[18px]"></i></button>
+    </div>
+
+    <div class="text-[12px]" style="color: var(--text-sub); line-height: 1.55;">
+      请选择删除方式：
+      <span data-dd-tags-delete-name style="color: var(--text); font-weight: 700;"></span>
+    </div>
+
+    <div class="pt-4 flex flex-col" style="gap: 10px;">
+      <button
+        type="button"
+        class="w-full dd-card"
+        style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);"
+        data-dd-action="tags-delete-keep-records"
+      >
+        仅删除标签
+      </button>
+      <button
+        type="button"
+        class="w-full dd-card"
+        style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 92%, #3b332e); color: var(--card); box-shadow:none;"
+        data-dd-action="tags-delete-with-records"
+      >
+        删除标签和记录
+      </button>
+      <button
+        type="button"
+        class="w-full dd-card"
+        style="height: 46px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 78%, var(--card)); box-shadow:none; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);"
+        data-dd-modal-close
+      >
+        取消
+      </button>
     </div>
   `;
 }
